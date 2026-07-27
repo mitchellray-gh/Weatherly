@@ -1,6 +1,7 @@
 import type { HourPoint, MinutePoint, Settings } from '../types'
 import { describe, iconFor } from '../lib/weatherCodes'
 import { formatPrecip } from '../lib/units'
+import { MEASURABLE_MM } from '../lib/precip'
 import './NextRain.css'
 
 interface Props {
@@ -32,7 +33,7 @@ function findNextRain(
   for (const m of minutely) {
     const t = new Date(m.time).getTime()
     if (t < now) continue
-    if (m.precipitation >= 0.1) {
+    if (m.precipitation >= MEASURABLE_MM) {
       return {
         time: new Date(m.time),
         amount: m.precipitation,
@@ -42,17 +43,17 @@ function findNextRain(
     }
   }
 
-  // 2. Fall back to hourly data across the full 16-day horizon.
+  // 2. Fall back to hourly data. Require a measurable forecast amount — a wet
+  //    weather code or moderate probability alone (with 0.00 in of rain) does
+  //    NOT count as "rain expected".
   for (const h of hourly) {
     const t = new Date(h.time).getTime()
     if (t < now) continue
-    const wet = h.precipitation >= 0.1 || isWetCode(h.weatherCode)
-    const likely = (h.precipitationProbability ?? 0) >= 40
-    if (wet && (h.precipitation >= 0.1 || likely)) {
+    if (h.precipitation >= MEASURABLE_MM) {
       return {
         time: new Date(h.time),
         amount: h.precipitation,
-        code: h.weatherCode,
+        code: isWetCode(h.weatherCode) ? h.weatherCode : 61,
         probability: h.precipitationProbability,
       }
     }
@@ -82,7 +83,7 @@ function absoluteLabel(target: Date, now: number): string {
 export function NextRain({ minutely, hourly, currentPrecip, settings, onOpen }: Props) {
   const now = Date.now()
 
-  if (currentPrecip >= 0.1) {
+  if (currentPrecip >= MEASURABLE_MM) {
     return (
       <button className="nextrain glass raining nextrain-btn" onClick={onOpen}>
         <div className="nextrain-icon">🌧️</div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GeoLocation } from '../types'
 import { fetchRadar, radarColor, type RadarData } from '../lib/radar'
 import { computeBasemap, loadTile, type BasemapTile } from '../lib/basemap'
+import { MEASURABLE_MM } from '../lib/precip'
 import './RadarMap.css'
 
 interface Props {
@@ -215,11 +216,11 @@ export function RadarMap({ location }: Props) {
     if (!data) return 0
     const vals = data.frames[frame]?.values ?? []
     if (vals.length === 0) return 0
-    const wet = vals.filter((v) => v >= 0.05).length
+    const wet = vals.filter((v) => v >= MEASURABLE_MM).length
     return wet / vals.length
   }, [data, frame])
 
-  const dryEverywhere = data != null && data.maxValue < 0.05
+  const dryEverywhere = data != null && data.maxValue < MEASURABLE_MM
 
   // First upcoming frame that actually has precipitation anywhere in the area.
   const nextRain = useMemo(() => {
@@ -228,7 +229,7 @@ export function RadarMap({ location }: Props) {
     for (let i = 0; i < data.frames.length; i++) {
       const f = data.frames[i]
       if (new Date(f.time).getTime() < now - 60 * 60 * 1000) continue
-      if (f.values.some((v) => v >= 0.05)) return { idx: i, time: new Date(f.time) }
+      if (f.values.some((v) => v >= MEASURABLE_MM)) return { idx: i, time: new Date(f.time) }
     }
     return null
   }, [data])

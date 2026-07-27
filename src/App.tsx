@@ -19,6 +19,7 @@ import { SettingsSheet } from './components/SettingsSheet'
 import { InfoSheet } from './components/InfoSheet'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
+import { hasRainNext24h } from './lib/precip'
 import { useLocations } from './state/useLocations'
 import { useSettings } from './state/useSettings'
 import { useWeather } from './hooks/useWeather'
@@ -76,7 +77,9 @@ export default function App() {
           settings={settings}
           onOpen={(activity) => setDrill({ kind: 'activity', activity })}
         />
-        <MinuteCast minutely={bundle.minutely} settings={settings} />
+        {hasRainNext24h(bundle.hourly) && (
+          <MinuteCast minutely={bundle.minutely} settings={settings} />
+        )}
         <RadarMap location={bundle.location} />
         <HourlyStrip
           hourly={bundle.hourly}
