@@ -1,4 +1,5 @@
 import type {
+  AirQuality,
   CurrentConditions,
   DayPoint,
   GeoLocation,
@@ -11,6 +12,7 @@ const GEOCODE = 'https://geocoding-api.open-meteo.com/v1/search'
 const FORECAST = 'https://api.open-meteo.com/v1/forecast'
 const ARCHIVE = 'https://archive-api.open-meteo.com/v1/archive'
 const CLIMATE = 'https://climate-api.open-meteo.com/v1/climate'
+const AIR_QUALITY = 'https://air-quality-api.open-meteo.com/v1/air-quality'
 
 // ---- tiny cache (memory + localStorage) --------------------------------
 
@@ -281,10 +283,52 @@ export async function fetchForecast(loc: GeoLocation): Promise<WeatherBundle> {
     minutely,
     hourly,
     daily,
+    airQuality: await fetchAirQuality(loc).catch(() => null),
     fetchedAt: Date.now(),
   }
   cacheSet(key, bundle)
   return bundle
+}
+
+// ---- air quality -------------------------------------------------------
+
+interface AirQualityResponse {
+  current?: {
+    time: string
+    us_aqi?: number | null
+    pm2_5?: number | null
+    pm10?: number | null
+    ozone?: number | null
+    nitrogen_dioxide?: number | null
+    european_aqi?: number | null
+  }
+}
+
+export async function fetchAirQuality(loc: GeoLocation): Promise<AirQuality | null> {
+  const key = `wx.aqi.${loc.id}`
+  const cached = cacheGet<AirQuality>(key, 30 * 60 * 1000)
+  if (cached) return cached
+
+  const params = new URLSearchParams({
+    latitude: String(loc.latitude),
+    longitude: String(loc.longitude),
+    timezone: 'auto',
+    current: 'us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,european_aqi',
+  })
+  const data = await getJson<AirQualityResponse>(`${AIR_QUALITY}?${params.toString()}`)
+  const c = data.current
+  if (!c) return null
+  const aqi: AirQuality = {
+    time: c.time,
+    usAqi: c.us_aqi ?? null,
+    pm25: c.pm2_5 ?? null,
+    pm10: c.pm10 ?? null,
+    ozone: c.ozone ?? null,
+    no2: c.nitrogen_dioxide ?? null,
+    europeanAqi: c.european_aqi ?? null,
+  }
+  cacheSet(key, aqi)
+  return aqi
 }
 
 // ---- historical archive (for climatological normals) ------------------

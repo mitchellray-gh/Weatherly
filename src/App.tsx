@@ -5,14 +5,18 @@ import { SearchBar } from './components/SearchBar'
 import { SavedLocations } from './components/SavedLocations'
 import { CurrentConditionsView } from './components/CurrentConditions'
 import { NextRain } from './components/NextRain'
+import { BestTimes } from './components/BestTimes'
 import { MinuteCast } from './components/MinuteCast'
 import { HourlyStrip } from './components/HourlyStrip'
 import { DailyList } from './components/DailyList'
 import { MetricsGrid } from './components/MetricsGrid'
+import { MetricDetailSheet, type DetailTarget } from './components/MetricDetailSheet'
+import { AlertToasts } from './components/Toast'
 import { YearOutlook } from './components/YearOutlook'
 import { SettingsSheet } from './components/SettingsSheet'
 import { InfoSheet } from './components/InfoSheet'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
+import { deriveAlerts } from './lib/alerts'
 import { useLocations } from './state/useLocations'
 import { useSettings } from './state/useSettings'
 import { useWeather } from './hooks/useWeather'
@@ -28,10 +32,17 @@ export default function App() {
   )
   const [showSettings, setShowSettings] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const [detail, setDetail] = useState<DetailTarget>(null)
 
   const today = bundle?.daily[0]
   const code = bundle?.current.weatherCode ?? 3
   const isDay = bundle?.current.isDay ?? true
+
+  const alerts = useMemo(
+    () =>
+      bundle ? deriveAlerts(bundle.current, bundle.hourly, bundle.airQuality) : [],
+    [bundle],
+  )
 
   const content = useMemo(() => {
     if (loading && !bundle) return <LoadingState />
@@ -56,10 +67,17 @@ export default function App() {
           currentPrecip={bundle.current.precipitation}
           settings={settings}
         />
+        <BestTimes hourly={bundle.hourly} settings={settings} />
         <MinuteCast minutely={bundle.minutely} settings={settings} />
         <HourlyStrip hourly={bundle.hourly} settings={settings} />
         <DailyList daily={bundle.daily} settings={settings} />
-        <MetricsGrid current={bundle.current} today={today} settings={settings} />
+        <MetricsGrid
+          current={bundle.current}
+          today={today}
+          airQuality={bundle.airQuality}
+          settings={settings}
+          onSelect={setDetail}
+        />
         {outlook ? (
           <YearOutlook
             outlook={outlook}
@@ -76,6 +94,7 @@ export default function App() {
   return (
     <>
       <Background weatherCode={code} isDay={isDay} />
+      <AlertToasts alerts={alerts} />
       <div className="app">
         <div className="topbar">
           <button className="icon-btn glass" onClick={() => setShowInfo(true)} aria-label="About">
@@ -113,6 +132,16 @@ export default function App() {
         update={update}
       />
       <InfoSheet open={showInfo} onClose={() => setShowInfo(false)} />
+      {bundle && (
+        <MetricDetailSheet
+          target={detail}
+          current={bundle.current}
+          hourly={bundle.hourly}
+          airQuality={bundle.airQuality}
+          settings={settings}
+          onClose={() => setDetail(null)}
+        />
+      )}
     </>
   )
 }

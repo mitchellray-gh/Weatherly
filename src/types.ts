@@ -89,7 +89,20 @@ export interface WeatherBundle {
   minutely: MinutePoint[]
   hourly: HourPoint[]
   daily: DayPoint[]
+  airQuality: AirQuality | null
   fetchedAt: number
+}
+
+export interface AirQuality {
+  time: string
+  /** US AQI (0–500+). */
+  usAqi: number | null
+  pm25: number | null
+  pm10: number | null
+  ozone: number | null
+  no2: number | null
+  /** European AQI as a fallback where US AQI is unavailable. */
+  europeanAqi: number | null
 }
 
 export type TemperatureUnit = 'celsius' | 'fahrenheit'

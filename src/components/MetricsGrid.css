@@ -16,6 +16,20 @@
   gap: 4px;
 }
 
+.metric-btn {
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-spring), background 0.15s;
+}
+
+.metric-btn:hover {
+  background: var(--glass-bg-strong);
+}
+
+.metric-btn:active {
+  transform: scale(0.97);
+}
+
 .metric-wide {
   grid-column: span 2;
 }
