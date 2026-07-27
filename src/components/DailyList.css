@@ -24,15 +24,24 @@
 }
 
 .daily-row {
+  width: 100%;
   display: grid;
   grid-template-columns: 52px 26px 34px 34px 1fr 34px;
   align-items: center;
   gap: 8px;
-  padding: 10px 0;
+  padding: 10px 8px;
+  margin: 0 -8px;
+  border-radius: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  transition: background 0.12s;
 }
 
-.daily-row:first-child {
+.daily-row:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.daily-list li:first-child .daily-row {
   border-top: none;
 }
 

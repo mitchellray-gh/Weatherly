@@ -83,6 +83,59 @@ export function findBestTimes(hourly: HourPoint[], now = Date.now()): BestTimes 
   }
 }
 
+export type ActivityKind = 'run' | 'walk'
+
+export const ACTIVITY_HOURS: Record<ActivityKind, [number, number]> = {
+  run: [5, 10],
+  walk: [17, 21],
+}
+
+export const ACTIVITY_META: Record<ActivityKind, { emoji: string; title: string; window: string }> = {
+  run: { emoji: '🏃', title: 'Morning Run', window: '5–10 AM' },
+  walk: { emoji: '🚶', title: 'Evening Walk', window: '5–9 PM' },
+}
+
+/**
+ * Best window for the given activity on each of the next `days` days,
+ * ranked best-first. Only days that actually have an eligible daylight hour
+ * in the window are returned.
+ */
+export function bestWindowsByDay(
+  hourly: HourPoint[],
+  kind: ActivityKind,
+  now = Date.now(),
+  days = 7,
+): ActivityWindow[] {
+  const [fromHour, toHour] = ACTIVITY_HOURS[kind]
+  const byDay = new Map<string, ActivityWindow>()
+
+  for (const h of hourly) {
+    const d = new Date(h.time)
+    const t = d.getTime()
+    if (t < now) continue
+    if (t > now + days * 24 * 60 * 60 * 1000) break
+    if (!h.isDay) continue
+    const hr = d.getHours()
+    if (hr < fromHour || hr >= toHour) continue
+
+    const dayKey = h.time.slice(0, 10)
+    const score = comfortScore(h)
+    const existing = byDay.get(dayKey)
+    if (!existing || score > existing.score) {
+      byDay.set(dayKey, {
+        time: d,
+        score,
+        temperature: h.temperature,
+        weatherCode: h.weatherCode,
+        windSpeed: h.windSpeed,
+        precipitationProbability: h.precipitationProbability,
+      })
+    }
+  }
+
+  return [...byDay.values()].sort((a, b) => b.score - a.score)
+}
+
 export function scoreLabel(score: number): string {
   if (score >= 85) return 'Beautiful'
   if (score >= 70) return 'Great'

@@ -1,0 +1,209 @@
+.drill {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 8px;
+}
+
+.drill-lead {
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+.drill-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+.drill-empty {
+  font-size: 15px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 20px 0;
+}
+
+/* Ranked / period lists */
+.drill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.drill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.06);
+  text-align: left;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.drill-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.drill-row:active {
+  transform: scale(0.98);
+}
+
+.drill-row-top {
+  background: rgba(255, 214, 107, 0.14);
+}
+
+.drill-row-rank {
+  width: 26px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.drill-row-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.drill-row-title {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.drill-row-sub {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.drill-row-cond {
+  font-size: 14px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.drill-badge {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  flex-shrink: 0;
+}
+
+.drill-badge[data-tier='Beautiful'] {
+  background: rgba(52, 199, 89, 0.28);
+  color: #b6f0c4;
+}
+.drill-badge[data-tier='Great'] {
+  background: rgba(126, 200, 255, 0.28);
+  color: #cfe9ff;
+}
+.drill-badge[data-tier='Good'] {
+  background: rgba(255, 214, 107, 0.24);
+  color: #ffe9b0;
+}
+
+/* Hero (hour / day) */
+.drill-hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.drill-hero-icon {
+  font-size: 44px;
+}
+
+.drill-hero-value {
+  font-size: 40px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.drill-hero-min {
+  font-size: 24px;
+  color: var(--text-faint);
+}
+
+.drill-hero-sub {
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.drill-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.drill-stat {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drill-stat-label {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.drill-stat-value {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.drill-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin: 4px 0 0;
+}
+
+.drill-hours {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.drill-hour {
+  flex: 0 0 auto;
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: background 0.12s;
+}
+
+.drill-hour:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.drill-hour-time {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.drill-hour-icon {
+  font-size: 18px;
+}
+
+.drill-hour-temp {
+  font-size: 15px;
+  font-weight: 500;
+}

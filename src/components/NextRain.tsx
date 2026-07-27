@@ -8,6 +8,7 @@ interface Props {
   hourly: HourPoint[]
   currentPrecip: number
   settings: Settings
+  onOpen: () => void
 }
 
 /** WMO codes >= 51 are drizzle/rain/snow/showers/thunder — i.e. precipitation. */
@@ -78,20 +79,21 @@ function absoluteLabel(target: Date, now: number): string {
   return target.toLocaleDateString([], { weekday: 'long', hour: 'numeric', minute: '2-digit' })
 }
 
-export function NextRain({ minutely, hourly, currentPrecip, settings }: Props) {
+export function NextRain({ minutely, hourly, currentPrecip, settings, onOpen }: Props) {
   const now = Date.now()
 
   if (currentPrecip >= 0.1) {
     return (
-      <section className="nextrain glass raining">
+      <button className="nextrain glass raining nextrain-btn" onClick={onOpen}>
         <div className="nextrain-icon">🌧️</div>
         <div className="nextrain-body">
           <div className="nextrain-title">It&rsquo;s raining now</div>
           <div className="nextrain-sub">
-            Currently {formatPrecip(currentPrecip, settings.precip)} · see the next-hour bars below
+            Currently {formatPrecip(currentPrecip, settings.precip)} · see upcoming rain periods
           </div>
         </div>
-      </section>
+        <span className="nextrain-chevron">›</span>
+      </button>
     )
   }
 
@@ -99,18 +101,19 @@ export function NextRain({ minutely, hourly, currentPrecip, settings }: Props) {
 
   if (!event) {
     return (
-      <section className="nextrain glass dry">
+      <button className="nextrain glass dry nextrain-btn" onClick={onOpen}>
         <div className="nextrain-icon">☀️</div>
         <div className="nextrain-body">
           <div className="nextrain-title">No rain expected</div>
           <div className="nextrain-sub">Nothing in the forecast for the next 16 days</div>
         </div>
-      </section>
+        <span className="nextrain-chevron">›</span>
+      </button>
     )
   }
 
   return (
-    <section className="nextrain glass">
+    <button className="nextrain glass nextrain-btn" onClick={onOpen}>
       <div className="nextrain-icon">{iconFor(event.code, true)}</div>
       <div className="nextrain-body">
         <div className="nextrain-title">Rain expected {relativeLabel(event.time, now)}</div>
@@ -124,6 +127,7 @@ export function NextRain({ minutely, hourly, currentPrecip, settings }: Props) {
           {event.amount >= 0.1 ? ` · ${formatPrecip(event.amount, settings.precip)}` : ''}
         </div>
       </div>
-    </section>
+      <span className="nextrain-chevron">›</span>
+    </button>
   )
 }

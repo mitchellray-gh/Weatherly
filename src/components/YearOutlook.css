@@ -115,6 +115,16 @@
   padding: 6px 2px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 0.12s, transform 0.1s;
+}
+
+.year-cell:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.year-cell:active {
+  transform: scale(0.94);
 }
 
 .year-cell.estimate {

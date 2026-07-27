@@ -8,6 +8,7 @@ interface Props {
   outlook: OutlookDay[]
   settings: Settings
   onWindowChange: (days: number) => void
+  onSelectDay: (day: OutlookDay) => void
 }
 
 const WINDOW_OPTIONS: { label: string; days: number }[] = [
@@ -39,7 +40,7 @@ function groupByMonth(outlook: OutlookDay[]): MonthGroup[] {
   return groups
 }
 
-export function YearOutlook({ outlook, settings, onWindowChange }: Props) {
+export function YearOutlook({ outlook, settings, onWindowChange, onSelectDay }: Props) {
   const months = useMemo(() => groupByMonth(outlook), [outlook])
   const [activeIdx, setActiveIdx] = useState(0)
   const active = months[activeIdx]
@@ -127,9 +128,10 @@ export function YearOutlook({ outlook, settings, onWindowChange }: Props) {
         {active.days.map((d) => {
           const date = new Date(d.date + 'T00:00:00')
           return (
-            <div
+            <button
               key={d.date}
               className={`year-cell ${d.kind}`}
+              onClick={() => onSelectDay(d)}
               title={`${date.toLocaleDateString()} · ${formatTemp(d.tempMin, settings.temperature)}/${formatTemp(
                 d.tempMax,
                 settings.temperature,
@@ -138,7 +140,7 @@ export function YearOutlook({ outlook, settings, onWindowChange }: Props) {
               <span className="year-cell-num">{date.getDate()}</span>
               <span className="year-cell-swatch" style={{ background: heatColor(d.tempMax) }} />
               <span className="year-cell-temp">{formatTemp(d.tempMax, settings.temperature, false)}°</span>
-            </div>
+            </button>
           )
         })}
       </div>

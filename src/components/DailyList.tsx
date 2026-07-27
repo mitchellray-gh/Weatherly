@@ -7,6 +7,7 @@ import './DailyList.css'
 interface Props {
   daily: DayPoint[]
   settings: Settings
+  onSelect: (date: string) => void
 }
 
 const COLLAPSED_COUNT = 7
@@ -16,7 +17,7 @@ function weekday(iso: string, i: number): string {
   return new Date(iso + 'T00:00:00').toLocaleDateString([], { weekday: 'short' })
 }
 
-export function DailyList({ daily, settings }: Props) {
+export function DailyList({ daily, settings, onSelect }: Props) {
   const [expanded, setExpanded] = useState(false)
   if (daily.length === 0) return null
 
@@ -42,22 +43,24 @@ export function DailyList({ daily, settings }: Props) {
           const left = ((dMin - lo) / span) * 100
           const width = ((dMax - dMin) / span) * 100
           return (
-            <li key={d.date} className="daily-row">
-              <span className="daily-day">{weekday(d.date, i)}</span>
-              <span className="daily-icon">{iconFor(d.weatherCode, true)}</span>
-              <span className="daily-pop">
-                {d.precipitationProbabilityMax != null && d.precipitationProbabilityMax >= 10
-                  ? `${Math.round(d.precipitationProbabilityMax)}%`
-                  : ''}
-              </span>
-              <span className="daily-min">{formatTemp(d.tempMin, settings.temperature)}</span>
-              <span className="daily-bar-track">
-                <span
-                  className="daily-bar-fill"
-                  style={{ left: `${left}%`, width: `${Math.max(6, width)}%` }}
-                />
-              </span>
-              <span className="daily-max">{formatTemp(d.tempMax, settings.temperature)}</span>
+            <li key={d.date}>
+              <button className="daily-row" onClick={() => onSelect(d.date)}>
+                <span className="daily-day">{weekday(d.date, i)}</span>
+                <span className="daily-icon">{iconFor(d.weatherCode, true)}</span>
+                <span className="daily-pop">
+                  {d.precipitationProbabilityMax != null && d.precipitationProbabilityMax >= 10
+                    ? `${Math.round(d.precipitationProbabilityMax)}%`
+                    : ''}
+                </span>
+                <span className="daily-min">{formatTemp(d.tempMin, settings.temperature)}</span>
+                <span className="daily-bar-track">
+                  <span
+                    className="daily-bar-fill"
+                    style={{ left: `${left}%`, width: `${Math.max(6, width)}%` }}
+                  />
+                </span>
+                <span className="daily-max">{formatTemp(d.tempMax, settings.temperature)}</span>
+              </button>
             </li>
           )
         })}

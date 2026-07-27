@@ -5,6 +5,28 @@
   padding: 14px 18px;
 }
 
+.nextrain-btn {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.nextrain-btn:hover {
+  background: var(--glass-bg-strong);
+}
+
+.nextrain-btn:active {
+  transform: scale(0.99);
+}
+
+.nextrain-chevron {
+  margin-left: auto;
+  font-size: 22px;
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
 .nextrain-icon {
   font-size: 30px;
   line-height: 1;

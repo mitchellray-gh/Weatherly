@@ -1,5 +1,5 @@
 import type { HourPoint, Settings } from '../types'
-import { findBestTimes, scoreLabel, type ActivityWindow } from '../lib/activity'
+import { findBestTimes, scoreLabel, type ActivityKind, type ActivityWindow } from '../lib/activity'
 import { iconFor } from '../lib/weatherCodes'
 import { formatTemp } from '../lib/units'
 import './BestTimes.css'
@@ -7,6 +7,7 @@ import './BestTimes.css'
 interface Props {
   hourly: HourPoint[]
   settings: Settings
+  onOpen: (activity: ActivityKind) => void
 }
 
 function whenLabel(time: Date, now: number): string {
@@ -27,18 +28,21 @@ function Card({
   title,
   window,
   settings,
+  onClick,
 }: {
   emoji: string
   title: string
   window: ActivityWindow | null
   settings: Settings
+  onClick: () => void
 }) {
   const now = Date.now()
   return (
-    <div className="besttime glass">
+    <button className="besttime glass besttime-btn" onClick={onClick}>
       <div className="besttime-head">
         <span className="besttime-emoji">{emoji}</span>
         <span className="besttime-title">{title}</span>
+        <span className="besttime-chevron">›</span>
       </div>
       {window ? (
         <>
@@ -55,11 +59,11 @@ function Card({
       ) : (
         <div className="besttime-when besttime-none">No ideal window this week</div>
       )}
-    </div>
+    </button>
   )
 }
 
-export function BestTimes({ hourly, settings }: Props) {
+export function BestTimes({ hourly, settings, onOpen }: Props) {
   const best = findBestTimes(hourly)
   if (!best.morningRun && !best.eveningWalk) return null
 
@@ -67,8 +71,20 @@ export function BestTimes({ hourly, settings }: Props) {
     <section className="besttimes">
       <h2 className="section-title">Best Time to Get Outside</h2>
       <div className="besttimes-grid">
-        <Card emoji="🏃" title="Morning Run" window={best.morningRun} settings={settings} />
-        <Card emoji="🚶" title="Evening Walk" window={best.eveningWalk} settings={settings} />
+        <Card
+          emoji="🏃"
+          title="Morning Run"
+          window={best.morningRun}
+          settings={settings}
+          onClick={() => onOpen('run')}
+        />
+        <Card
+          emoji="🚶"
+          title="Evening Walk"
+          window={best.eveningWalk}
+          settings={settings}
+          onClick={() => onOpen('walk')}
+        />
       </div>
     </section>
   )

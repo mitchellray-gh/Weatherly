@@ -11,10 +11,30 @@
   gap: 8px;
 }
 
+.besttime-btn {
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.besttime-btn:hover {
+  background: var(--glass-bg-strong);
+}
+
+.besttime-btn:active {
+  transform: scale(0.98);
+}
+
 .besttime-head {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.besttime-chevron {
+  margin-left: auto;
+  font-size: 20px;
+  color: var(--text-faint);
 }
 
 .besttime-emoji {

@@ -11,6 +11,7 @@ import { HourlyStrip } from './components/HourlyStrip'
 import { DailyList } from './components/DailyList'
 import { MetricsGrid } from './components/MetricsGrid'
 import { MetricDetailSheet, type DetailTarget } from './components/MetricDetailSheet'
+import { DrillSheet, type Drill } from './components/DrillSheet'
 import { AlertToasts } from './components/Toast'
 import { YearOutlook } from './components/YearOutlook'
 import { SettingsSheet } from './components/SettingsSheet'
@@ -33,6 +34,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [detail, setDetail] = useState<DetailTarget>(null)
+  const [drill, setDrill] = useState<Drill | null>(null)
 
   const today = bundle?.daily[0]
   const code = bundle?.current.weatherCode ?? 3
@@ -66,11 +68,24 @@ export default function App() {
           hourly={bundle.hourly}
           currentPrecip={bundle.current.precipitation}
           settings={settings}
+          onOpen={() => setDrill({ kind: 'rain' })}
         />
-        <BestTimes hourly={bundle.hourly} settings={settings} />
+        <BestTimes
+          hourly={bundle.hourly}
+          settings={settings}
+          onOpen={(activity) => setDrill({ kind: 'activity', activity })}
+        />
         <MinuteCast minutely={bundle.minutely} settings={settings} />
-        <HourlyStrip hourly={bundle.hourly} settings={settings} />
-        <DailyList daily={bundle.daily} settings={settings} />
+        <HourlyStrip
+          hourly={bundle.hourly}
+          settings={settings}
+          onSelect={(time) => setDrill({ kind: 'hour', time })}
+        />
+        <DailyList
+          daily={bundle.daily}
+          settings={settings}
+          onSelect={(date) => setDrill({ kind: 'day', date })}
+        />
         <MetricsGrid
           current={bundle.current}
           today={today}
@@ -83,6 +98,10 @@ export default function App() {
             outlook={outlook}
             settings={settings}
             onWindowChange={(days) => update({ outlookDays: days })}
+            onSelectDay={(day) => {
+              const fc = bundle.daily.find((d) => d.date === day.date)
+              setDrill(fc ? { kind: 'day', date: day.date } : { kind: 'outlook', day })
+            }}
           />
         ) : outlookLoading ? (
           <InlineSkeleton height={360} />
@@ -140,6 +159,15 @@ export default function App() {
           airQuality={bundle.airQuality}
           settings={settings}
           onClose={() => setDetail(null)}
+        />
+      )}
+      {bundle && (
+        <DrillSheet
+          drill={drill}
+          bundle={bundle}
+          settings={settings}
+          onClose={() => setDrill(null)}
+          onOpen={setDrill}
         />
       )}
     </>

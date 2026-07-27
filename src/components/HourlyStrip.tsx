@@ -6,9 +6,10 @@ import './HourlyStrip.css'
 interface Props {
   hourly: HourPoint[]
   settings: Settings
+  onSelect: (time: string) => void
 }
 
-export function HourlyStrip({ hourly, settings }: Props) {
+export function HourlyStrip({ hourly, settings, onSelect }: Props) {
   const now = Date.now()
   const upcoming = hourly
     .filter((h) => new Date(h.time).getTime() >= now - 60 * 60 * 1000)
@@ -23,7 +24,7 @@ export function HourlyStrip({ hourly, settings }: Props) {
       </h2>
       <div className="hourly-scroll no-scrollbar">
         {upcoming.map((h, i) => (
-          <div key={h.time} className="hourly-item">
+          <button key={h.time} className="hourly-item" onClick={() => onSelect(h.time)}>
             <div className="hourly-time">
               {i === 0 ? 'Now' : new Date(h.time).toLocaleTimeString([], { hour: 'numeric' })}
             </div>
@@ -34,7 +35,7 @@ export function HourlyStrip({ hourly, settings }: Props) {
               <div className="hourly-pop hourly-pop-empty" />
             )}
             <div className="hourly-temp">{formatTemp(h.temperature, settings.temperature)}</div>
-          </div>
+          </button>
         ))}
       </div>
     </section>
