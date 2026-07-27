@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { GeoLocation } from '../types'
 import { fetchRadar, radarColor, type RadarData } from '../lib/radar'
+import { computeBasemap, loadTile, type BasemapTile } from '../lib/basemap'
 import './RadarMap.css'
 
 interface Props {
@@ -8,6 +9,10 @@ interface Props {
 }
 
 const BUF = 72 // interpolation buffer resolution (BUF x BUF)
+
+interface LoadedTile extends BasemapTile {
+  img: HTMLImageElement
+}
 
 function bilinear(data: RadarData, frameIdx: number, gx: number, gy: number): number {
   // gx, gy are fractional grid coordinates in [0, gridSize-1].
@@ -33,6 +38,8 @@ export function RadarMap({ location }: Props) {
   const [error, setError] = useState(false)
   const [frame, setFrame] = useState(0)
   const [playing, setPlaying] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [tiles, setTiles] = useState<LoadedTile[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bufRef = useRef<HTMLCanvasElement | null>(null)
 
@@ -42,6 +49,8 @@ export function RadarMap({ location }: Props) {
     setError(false)
     setFrame(0)
     setPlaying(false)
+    setExpanded(false)
+    setTiles([])
     fetchRadar(location, { gridSize: 11, spanDeg: 0.55, days: 7 })
       .then((d) => {
         if (alive) setData(d)
@@ -53,6 +62,29 @@ export function RadarMap({ location }: Props) {
       alive = false
     }
   }, [location])
+
+  // Load the basemap tiles that cover the radar bounding box.
+  useEffect(() => {
+    if (!data) return
+    let alive = true
+    const west = data.lons[0]
+    const east = data.lons[data.lons.length - 1]
+    const north = data.lats[0]
+    const south = data.lats[data.lats.length - 1]
+    const { tiles: specs } = computeBasemap(west, east, north, south, 320, 320)
+    Promise.all(
+      specs.map((s) =>
+        loadTile(s.url)
+          .then((img) => ({ ...s, img }) as LoadedTile)
+          .catch(() => null),
+      ),
+    ).then((loaded) => {
+      if (alive) setTiles(loaded.filter((t): t is LoadedTile => t !== null))
+    })
+    return () => {
+      alive = false
+    }
+  }, [data])
 
   // Playback loop.
   useEffect(() => {
@@ -101,12 +133,27 @@ export function RadarMap({ location }: Props) {
     const w = canvas.width
     const h = canvas.height
     ctx.clearRect(0, 0, w, h)
+
+    // Basemap tiles (geographic context) first.
+    if (tiles.length > 0) {
+      for (const t of tiles) {
+        try {
+          ctx.drawImage(t.img, t.dx, t.dy, t.dw, t.dh)
+        } catch {
+          /* tainted/failed tile — skip */
+        }
+      }
+    }
+
+    // Precipitation overlay on top of the map.
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
+    ctx.globalAlpha = 0.78
     ctx.drawImage(buf, 0, 0, w, h)
+    ctx.globalAlpha = 1
 
     // Range rings + crosshair for a radar feel.
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)'
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)'
     ctx.lineWidth = 1
     const cx = w / 2
     const cy = h / 2
@@ -122,14 +169,15 @@ export function RadarMap({ location }: Props) {
     ctx.lineTo(w, cy)
     ctx.stroke()
 
-    // Center marker.
-    ctx.fillStyle = '#ffffff'
-    ctx.strokeStyle = 'rgba(0,0,0,0.4)'
+    // "You are here" marker.
+    ctx.fillStyle = '#2f7fe0'
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 2.5
     ctx.beginPath()
-    ctx.arc(cx, cy, 5, 0, Math.PI * 2)
+    ctx.arc(cx, cy, 6, 0, Math.PI * 2)
     ctx.fill()
     ctx.stroke()
-  }, [data, frame])
+  }, [data, frame, tiles, expanded])
 
   const frameLabel = useMemo(() => {
     if (!data) return ''
@@ -154,14 +202,55 @@ export function RadarMap({ location }: Props) {
 
   const dryEverywhere = data != null && data.maxValue < 0.05
 
-  // Jump the scrubber to the first frame that actually has precipitation.
-  function jumpToRain() {
-    if (!data) return
-    const idx = data.frames.findIndex((f) => f.values.some((v) => v >= 0.05))
-    if (idx >= 0) {
-      setPlaying(false)
-      setFrame(idx)
+  // First upcoming frame that actually has precipitation anywhere in the area.
+  const nextRain = useMemo(() => {
+    if (!data) return null
+    const now = Date.now()
+    for (let i = 0; i < data.frames.length; i++) {
+      const f = data.frames[i]
+      if (new Date(f.time).getTime() < now - 60 * 60 * 1000) continue
+      if (f.values.some((v) => v >= 0.05)) return { idx: i, time: new Date(f.time) }
     }
+    return null
+  }, [data])
+
+  const hoursUntilRain = nextRain ? (nextRain.time.getTime() - Date.now()) / 3600000 : Infinity
+  const rainSoon = hoursUntilRain <= 10
+
+  // Auto-expand the map when rain is imminent; otherwise stay collapsed.
+  useEffect(() => {
+    if (!data) return
+    if (rainSoon && nextRain) {
+      setExpanded(true)
+      setFrame(nextRain.idx)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
+
+  // Jump the scrubber to the next precipitation and expand the map.
+  function jumpToRain() {
+    if (!data || !nextRain) return
+    setExpanded(true)
+    setPlaying(false)
+    setFrame(nextRain.idx)
+  }
+
+  function nextRainLabel(): string {
+    if (!nextRain) return ''
+    const h = hoursUntilRain
+    const when =
+      h <= 0
+        ? 'now'
+        : h < 1
+          ? `in ${Math.round(h * 60)} min`
+          : h < 24
+            ? `in ${Math.round(h)} hr${Math.round(h) === 1 ? '' : 's'}`
+            : `in ${Math.round(h / 24)} day${Math.round(h / 24) === 1 ? '' : 's'}`
+    const abs =
+      h < 24
+        ? nextRain.time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+        : `${nextRain.time.toLocaleDateString([], { weekday: 'long' })} ${nextRain.time.toLocaleTimeString([], { hour: 'numeric' })}`
+    return `${when} · ${abs}`
   }
 
   if (error) {
@@ -171,6 +260,48 @@ export function RadarMap({ location }: Props) {
           Precipitation Radar
         </h2>
         <p className="radar-empty">Radar is unavailable for this location right now.</p>
+      </section>
+    )
+  }
+
+  // Loading placeholder.
+  if (!data) {
+    return (
+      <section className="radar glass">
+        <h2 className="section-title" style={{ margin: '0 0 8px' }}>
+          Precipitation Radar
+        </h2>
+        <p className="radar-empty">Loading radar…</p>
+      </section>
+    )
+  }
+
+  // Fully dry over the whole forecast window.
+  if (dryEverywhere) {
+    return (
+      <section className="radar glass">
+        <div className="radar-collapsed">
+          <span className="radar-collapsed-icon">☀️</span>
+          <div>
+            <div className="radar-collapsed-title">No precipitation expected</div>
+            <div className="radar-collapsed-sub">Nothing on radar for the next 7 days</div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Rain exists but not within 10 hours → compact prompt (map hidden by default).
+  if (!expanded) {
+    return (
+      <section className="radar glass">
+        <button className="radar-collapsed radar-collapsed-btn" onClick={jumpToRain}>
+          <span className="radar-collapsed-icon">🌧️</span>
+          <div>
+            <div className="radar-collapsed-title">Next rain {nextRainLabel()}</div>
+            <div className="radar-collapsed-sub">Tap to open the radar map →</div>
+          </div>
+        </button>
       </section>
     )
   }
@@ -186,26 +317,17 @@ export function RadarMap({ location }: Props) {
 
       <div className="radar-stage">
         <canvas ref={canvasRef} width={320} height={320} className="radar-canvas" />
-        {!data && <div className="radar-loading">Loading radar…</div>}
-        {dryEverywhere && (
-          <div className="radar-dry">
-            <span className="radar-dry-emoji">☀️</span>
-            <span>No precipitation expected in the next 7 days</span>
-          </div>
-        )}
-        {data && !dryEverywhere && (
-          <div className="radar-coverage">
-            {frameCoverage > 0 ? `${Math.round(frameCoverage * 100)}% of area` : 'Dry now'}
-          </div>
-        )}
+        <div className="radar-coverage">
+          {frameCoverage > 0 ? `${Math.round(frameCoverage * 100)}% of area` : 'Dry now'}
+        </div>
         <div className="radar-scalebar">~120 km across</div>
+        <div className="radar-attribution">© OpenStreetMap · CARTO</div>
       </div>
 
       <div className="radar-controls">
         <button
           className="radar-play"
           onClick={() => setPlaying((p) => !p)}
-          disabled={!data || dryEverywhere}
           aria-label={playing ? 'Pause' : 'Play'}
         >
           {playing ? '❚❚' : '▶'}
@@ -214,13 +336,12 @@ export function RadarMap({ location }: Props) {
           type="range"
           className="radar-slider"
           min={0}
-          max={data ? data.frames.length - 1 : 0}
+          max={data.frames.length - 1}
           value={frame}
           onChange={(e) => {
             setPlaying(false)
             setFrame(+e.target.value)
           }}
-          disabled={!data || dryEverywhere}
           aria-label="Radar time"
         />
       </div>
@@ -230,13 +351,17 @@ export function RadarMap({ location }: Props) {
         <span className="radar-legend-bar" />
         <span className="radar-legend-label">Heavy</span>
       </div>
-      {data && !dryEverywhere ? (
+
+      <div className="radar-footer">
         <button className="radar-jump" onClick={jumpToRain}>
           Jump to next precipitation →
         </button>
-      ) : (
-        <p className="radar-note">Forecast precipitation for your area, out to 7 days.</p>
-      )}
+        {!rainSoon && (
+          <button className="radar-hide" onClick={() => setExpanded(false)}>
+            Hide map
+          </button>
+        )}
+      </div>
     </section>
   )
 }
