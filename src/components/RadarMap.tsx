@@ -39,9 +39,25 @@ export function RadarMap({ location }: Props) {
   const [frame, setFrame] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [zoom, setZoom] = useState(1) // 1 = full area; higher = tighter/bigger labels
   const [tiles, setTiles] = useState<LoadedTile[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bufRef = useRef<HTMLCanvasElement | null>(null)
+
+  // Crisp rendering resolution (device pixels).
+  const RES = Math.round(320 * Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1))
+
+  // Visible geographic box for the current zoom (cropped around center).
+  const bbox = useMemo(() => {
+    if (!data) return null
+    const frac = 1 / zoom
+    const { lat, lon } = data.center
+    const west = lon - (lon - data.lons[0]) * frac
+    const east = lon + (data.lons[data.lons.length - 1] - lon) * frac
+    const north = lat + (data.lats[0] - lat) * frac
+    const south = lat - (lat - data.lats[data.lats.length - 1]) * frac
+    return { west, east, north, south }
+  }, [data, zoom])
 
   useEffect(() => {
     let alive = true
@@ -50,6 +66,7 @@ export function RadarMap({ location }: Props) {
     setFrame(0)
     setPlaying(false)
     setExpanded(false)
+    setZoom(1)
     setTiles([])
     fetchRadar(location, { gridSize: 11, spanDeg: 0.55, days: 7 })
       .then((d) => {
@@ -63,15 +80,11 @@ export function RadarMap({ location }: Props) {
     }
   }, [location])
 
-  // Load the basemap tiles that cover the radar bounding box.
+  // Load the basemap tiles that cover the (zoomed) radar bounding box.
   useEffect(() => {
-    if (!data) return
+    if (!data || !bbox) return
     let alive = true
-    const west = data.lons[0]
-    const east = data.lons[data.lons.length - 1]
-    const north = data.lats[0]
-    const south = data.lats[data.lats.length - 1]
-    const { tiles: specs } = computeBasemap(west, east, north, south, 320, 320)
+    const { tiles: specs } = computeBasemap(bbox.west, bbox.east, bbox.north, bbox.south, RES, RES)
     Promise.all(
       specs.map((s) =>
         loadTile(s.url)
@@ -84,7 +97,7 @@ export function RadarMap({ location }: Props) {
     return () => {
       alive = false
     }
-  }, [data])
+  }, [data, bbox, RES])
 
   // Playback loop.
   useEffect(() => {
@@ -103,6 +116,7 @@ export function RadarMap({ location }: Props) {
     if (!ctx) return
 
     // Render precipitation into a small offscreen buffer, then upscale smoothly.
+    // Only the visible (zoomed) portion of the grid is sampled.
     if (!bufRef.current) bufRef.current = document.createElement('canvas')
     const buf = bufRef.current
     buf.width = BUF
@@ -110,10 +124,13 @@ export function RadarMap({ location }: Props) {
     const bctx = buf.getContext('2d')!
     const img = bctx.createImageData(BUF, BUF)
     const n = data.gridSize
+    const frac = 1 / zoom
+    const gCenter = (n - 1) / 2
+    const gHalf = ((n - 1) / 2) * frac
     for (let py = 0; py < BUF; py++) {
       for (let px = 0; px < BUF; px++) {
-        const gx = (px / (BUF - 1)) * (n - 1)
-        const gy = (py / (BUF - 1)) * (n - 1)
+        const gx = gCenter - gHalf + (px / (BUF - 1)) * (2 * gHalf)
+        const gy = gCenter - gHalf + (py / (BUF - 1)) * (2 * gHalf)
         const mm = bilinear(data, frame, gx, gy)
         const rgba = radarColor(mm)
         const m = /rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/.exec(rgba)
@@ -130,6 +147,9 @@ export function RadarMap({ location }: Props) {
     }
     bctx.putImageData(img, 0, 0)
 
+    // Size the backing store for crisp (retina) rendering.
+    if (canvas.width !== RES) canvas.width = RES
+    if (canvas.height !== RES) canvas.height = RES
     const w = canvas.width
     const h = canvas.height
     ctx.clearRect(0, 0, w, h)
@@ -155,8 +175,9 @@ export function RadarMap({ location }: Props) {
     // Subtle range rings (light basemap → dark, low-opacity rings).
     const cx = w / 2
     const cy = h / 2
+    const scale = w / 320
     ctx.strokeStyle = 'rgba(20,30,50,0.14)'
-    ctx.lineWidth = 1
+    ctx.lineWidth = 1 * scale
     for (let r = 1; r <= 2; r++) {
       ctx.beginPath()
       ctx.arc(cx, cy, (Math.min(w, h) / 2) * (r / 2.2), 0, Math.PI * 2)
@@ -165,17 +186,17 @@ export function RadarMap({ location }: Props) {
 
     // "You are here" marker with a soft halo for contrast on any background.
     ctx.beginPath()
-    ctx.arc(cx, cy, 11, 0, Math.PI * 2)
+    ctx.arc(cx, cy, 11 * scale, 0, Math.PI * 2)
     ctx.fillStyle = 'rgba(255,255,255,0.55)'
     ctx.fill()
     ctx.beginPath()
-    ctx.arc(cx, cy, 6, 0, Math.PI * 2)
+    ctx.arc(cx, cy, 6 * scale, 0, Math.PI * 2)
     ctx.fillStyle = '#2f7fe0'
     ctx.fill()
-    ctx.lineWidth = 2.5
+    ctx.lineWidth = 2.5 * scale
     ctx.strokeStyle = '#ffffff'
     ctx.stroke()
-  }, [data, frame, tiles, expanded])
+  }, [data, frame, tiles, expanded, zoom, RES])
 
   const frameLabel = useMemo(() => {
     if (!data) return ''
@@ -318,7 +339,23 @@ export function RadarMap({ location }: Props) {
         <div className="radar-coverage">
           {frameCoverage > 0 ? `${Math.round(frameCoverage * 100)}% of area` : 'Dry now'}
         </div>
-        <div className="radar-scalebar">~120 km across</div>
+        <div className="radar-zoom">
+          <button
+            onClick={() => setZoom((z) => Math.min(4, z + 1))}
+            disabled={zoom >= 4}
+            aria-label="Zoom in"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setZoom((z) => Math.max(1, z - 1))}
+            disabled={zoom <= 1}
+            aria-label="Zoom out"
+          >
+            −
+          </button>
+        </div>
+        <div className="radar-scalebar">~{Math.round(120 / zoom)} km across</div>
         <div className="radar-attribution">© OpenStreetMap · CARTO</div>
       </div>
 
