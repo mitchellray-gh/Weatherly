@@ -4,7 +4,6 @@ import { Background } from './components/Background'
 import { SearchBar } from './components/SearchBar'
 import { SavedLocations } from './components/SavedLocations'
 import { CurrentConditionsView } from './components/CurrentConditions'
-import { NextRain } from './components/NextRain'
 import { BestTimes } from './components/BestTimes'
 import { MinuteCast } from './components/MinuteCast'
 import { RadarMap } from './components/RadarMap'
@@ -23,6 +22,7 @@ import { hasRainNext24h } from './lib/precip'
 import { useLocations } from './state/useLocations'
 import { useSettings } from './state/useSettings'
 import { useWeather } from './hooks/useWeather'
+import { useEffect } from 'react'
 import './App.css'
 
 export default function App() {
@@ -38,9 +38,20 @@ export default function App() {
   const [detail, setDetail] = useState<DetailTarget>(null)
   const [drill, setDrill] = useState<Drill | null>(null)
 
+  // Apply the book/auto theme to the document root.
+  useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme
+    if (settings.theme === 'book') {
+      // Book mode owns the canvas colour; the gradient Background is not rendered.
+      document.documentElement.style.backgroundColor = '#08090b'
+      document.body.style.backgroundColor = '#08090b'
+    }
+  }, [settings.theme])
+
   const today = bundle?.daily[0]
   const code = bundle?.current.weatherCode ?? 3
   const isDay = bundle?.current.isDay ?? true
+  const book = settings.theme === 'book'
 
   const alerts = useMemo(
     () =>
@@ -65,13 +76,6 @@ export default function App() {
           today={today}
           settings={settings}
         />
-        <NextRain
-          minutely={bundle.minutely}
-          hourly={bundle.hourly}
-          currentPrecip={bundle.current.precipitation}
-          settings={settings}
-          onOpen={() => setDrill({ kind: 'rain' })}
-        />
         <BestTimes
           hourly={bundle.hourly}
           settings={settings}
@@ -83,8 +87,11 @@ export default function App() {
         <RadarMap location={bundle.location} />
         <HourlyStrip
           hourly={bundle.hourly}
+          minutely={bundle.minutely}
+          currentPrecip={bundle.current.precipitation}
           settings={settings}
           onSelect={(time) => setDrill({ kind: 'hour', time })}
+          onOpenRain={() => setDrill({ kind: 'rain' })}
         />
         <DailyList
           daily={bundle.daily}
@@ -119,7 +126,7 @@ export default function App() {
 
   return (
     <>
-      <Background weatherCode={code} isDay={isDay} />
+      {!book && <Background weatherCode={code} isDay={isDay} />}
       <AlertToasts alerts={alerts} />
       <div className="app">
         <div className="topbar">

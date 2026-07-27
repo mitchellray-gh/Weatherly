@@ -43,6 +43,7 @@ export const DEFAULT_SETTINGS: Settings = {
   precip: 'inch',
   climateOverlay: true,
   outlookDays: 730,
+  theme: 'auto',
 }
 
 export function degToCompass(deg: number): string {

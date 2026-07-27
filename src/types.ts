@@ -108,6 +108,7 @@ export interface AirQuality {
 export type TemperatureUnit = 'celsius' | 'fahrenheit'
 export type WindUnit = 'kmh' | 'mph'
 export type PrecipUnit = 'mm' | 'inch'
+export type Theme = 'auto' | 'book'
 
 export interface Settings {
   temperature: TemperatureUnit
@@ -116,4 +117,6 @@ export interface Settings {
   climateOverlay: boolean
   /** Length of the long-range outlook window, in days. */
   outlookDays: number
+  /** 'auto' = dynamic colorful UI; 'book' = minimal monochrome newspaper mode. */
+  theme: Theme
 }

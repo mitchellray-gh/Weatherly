@@ -17,6 +17,93 @@
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ------------------------------------------------------------------ *
+ * Book mode — a minimal, monochrome "newspaper" theme for low light.  *
+ * No color, no blur, hairline rules, serif-ish reading feel, muted    *
+ * (grayscale) icons. Data quality is unchanged; only presentation.    *
+ * ------------------------------------------------------------------ */
+:root[data-theme='book'] {
+  --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
+    Georgia, 'Times New Roman', serif;
+  --glass-bg: rgba(255, 255, 255, 0.015);
+  --glass-bg-strong: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-shadow: none;
+  --text: rgba(240, 240, 238, 0.96);
+  --text-dim: rgba(220, 220, 216, 0.68);
+  --text-faint: rgba(210, 210, 205, 0.42);
+  --blur: 0px;
+  --accent: rgba(240, 240, 238, 0.96);
+}
+
+/* Flatten the frosted cards into hairline-ruled blocks. */
+:root[data-theme='book'] .glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* Mute emoji/icons to grayscale so the page reads as text, not color. */
+:root[data-theme='book'] .cc-icon,
+:root[data-theme='book'] .hourly-icon,
+:root[data-theme='book'] .daily-icon,
+:root[data-theme='book'] .hourly-rainrow-icon,
+:root[data-theme='book'] .metric .card-label,
+:root[data-theme='book'] .besttime-emoji,
+:root[data-theme='book'] .drill-hero-icon,
+:root[data-theme='book'] .detail-icon,
+:root[data-theme='book'] .radar-collapsed-icon {
+  filter: grayscale(1) brightness(1.6) contrast(0.7);
+  opacity: 0.85;
+}
+
+/* Kill the colored temperature/precip gradients → simple light rules. */
+:root[data-theme='book'] .daily-bar-fill,
+:root[data-theme='book'] .minute-bar-fill {
+  background: rgba(240, 240, 238, 0.85) !important;
+}
+
+:root[data-theme='book'] .daily-bar-track,
+:root[data-theme='book'] .minute-bar-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+:root[data-theme='book'] .hourly-pop,
+:root[data-theme='book'] .daily-pop {
+  color: var(--text-dim);
+}
+
+/* Accent-blue links/buttons become plain light text with an underline. */
+:root[data-theme='book'] .daily-toggle,
+:root[data-theme='book'] .radar-jump,
+:root[data-theme='book'] .sheet-close,
+:root[data-theme='book'] .besttime-badge,
+:root[data-theme='book'] .drill-badge {
+  color: var(--text) !important;
+  background: transparent !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Section titles get let-spaced small-caps like a masthead. */
+:root[data-theme='book'] .section-title,
+:root[data-theme='book'] .card-label {
+  letter-spacing: 0.14em;
+  font-variant: small-caps;
+  text-transform: none;
+}
+
+/* Segmented controls → simple bracketed toggles. */
+:root[data-theme='book'] .seg button.active,
+:root[data-theme='book'] .daily-seg button.active,
+:root[data-theme='book'] .year-window-opt.active,
+:root[data-theme='book'] .year-month.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

@@ -36,6 +36,17 @@ export function SettingsSheet({ open, onClose, settings, update }: Props) {
   return (
     <Sheet open={open} title="Settings" onClose={onClose}>
       <div className="settings-row">
+        <span className="settings-label">Appearance</span>
+        <Segment
+          value={settings.theme}
+          options={[
+            { value: 'auto', label: 'Vivid' },
+            { value: 'book', label: 'Book' },
+          ]}
+          onChange={(v) => update({ theme: v })}
+        />
+      </div>
+      <div className="settings-row">
         <span className="settings-label">Temperature</span>
         <Segment
           value={settings.temperature}
