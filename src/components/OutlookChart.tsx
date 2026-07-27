@@ -61,6 +61,17 @@ export function OutlookChart({ days, settings }: Props) {
 
   const yTicks = [model.hi, (model.hi + model.lo) / 2, model.lo]
 
+  // X-axis: ~5 evenly spaced date labels.
+  const xTickCount = Math.min(5, n)
+  const xTicks =
+    n > 1
+      ? Array.from({ length: xTickCount }, (_, k) => {
+          const i = Math.round((k / (xTickCount - 1)) * (n - 1))
+          const d = new Date(days[i].date + 'T00:00:00')
+          return { i, label: d.toLocaleDateString([], { month: 'short', day: 'numeric' }) }
+        })
+      : []
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Temperature outlook chart">
       {yTicks.map((t, i) => (
@@ -123,6 +134,20 @@ export function OutlookChart({ days, settings }: Props) {
           strokeDasharray="2 3"
         />
       )}
+
+      {/* X-axis date labels */}
+      {xTicks.map((t, k) => (
+        <text
+          key={k}
+          x={x(t.i)}
+          y={H - 7}
+          fontSize="10"
+          fill="rgba(255,255,255,0.55)"
+          textAnchor={k === 0 ? 'start' : k === xTicks.length - 1 ? 'end' : 'middle'}
+        >
+          {t.label}
+        </text>
+      ))}
     </svg>
   )
 }

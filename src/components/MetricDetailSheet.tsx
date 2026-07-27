@@ -81,6 +81,7 @@ export function MetricDetailSheet({
   const def = METRIC_DEFS[target]
   const window = next24(hourly)
   const series = window.map((h) => def.hourly(h, settings)).filter((v): v is number => v != null)
+  const hourLabels = window.map((h) => new Date(h.time).toLocaleTimeString([], { hour: 'numeric' }))
   const hasTrend = series.length >= 2
   const suffix = def.unitSuffix(settings)
 
@@ -102,7 +103,7 @@ export function MetricDetailSheet({
                 {suffix ? ` ${suffix}` : ''}
               </span>
             </div>
-            <Sparkline values={series} color={def.color} />
+            <Sparkline values={series} labels={hourLabels} color={def.color} height={140} />
           </div>
         )}
 
