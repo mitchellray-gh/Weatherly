@@ -81,7 +81,7 @@ function ActivityDetail({
     <div className="drill">
       <p className="drill-lead">
         Best {meta.title.toLowerCase()} windows over the next 7 days ({meta.window}), ranked by
-        comfort — a blend of feels-like temperature, rain chance, wind, and UV.
+        suitability — feels-like temperature, rain, wind, and sky, weighted for this activity.
       </p>
       <div className="drill-list">
         {days.map((w, i) => {

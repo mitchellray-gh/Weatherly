@@ -1,4 +1,5 @@
 import type { PrecipUnit, Settings, TemperatureUnit, WindUnit } from '../types'
+import { DEFAULT_ACTIVITIES } from './activity'
 
 export function cToUnit(celsius: number, unit: TemperatureUnit): number {
   return unit === 'fahrenheit' ? celsius * 1.8 + 32 : celsius
@@ -44,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   climateOverlay: true,
   outlookDays: 730,
   theme: 'auto',
+  activities: DEFAULT_ACTIVITIES,
 }
 
 export function degToCompass(deg: number): string {

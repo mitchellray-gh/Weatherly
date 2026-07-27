@@ -91,6 +91,66 @@
   color: #1a1f30;
 }
 
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 18px 0 6px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-note {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-faint);
+  margin: 0 0 12px;
+}
+
+.activities-group {
+  margin-bottom: 14px;
+}
+
+.activities-cat {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.activities-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.activity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.activity-chip.active {
+  background: rgba(255, 255, 255, 0.92);
+  color: #1a1f30;
+}
+
+.activity-chip-emoji {
+  font-size: 14px;
+}
+
 .info-body p {
   font-size: 15px;
   line-height: 1.55;

@@ -119,4 +119,6 @@ export interface Settings {
   outlookDays: number
   /** 'auto' = dynamic colorful UI; 'book' = minimal monochrome newspaper mode. */
   theme: Theme
+  /** Enabled activity ids for the "Best Time to Get Outside" section. */
+  activities: string[]
 }

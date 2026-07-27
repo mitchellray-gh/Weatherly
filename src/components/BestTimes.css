@@ -37,6 +37,11 @@
   color: var(--text-faint);
 }
 
+.besttime-alert {
+  border-color: rgba(126, 200, 255, 0.5);
+  box-shadow: 0 0 0 1px rgba(126, 200, 255, 0.15) inset;
+}
+
 .besttime-emoji {
   font-size: 20px;
 }

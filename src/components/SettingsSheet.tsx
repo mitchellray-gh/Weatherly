@@ -1,4 +1,5 @@
 import type { Settings } from '../types'
+import { ACTIVITIES, type ActivityCategory } from '../lib/activity'
 import { Sheet } from './Sheet'
 
 interface Props {
@@ -90,6 +91,65 @@ export function SettingsSheet({ open, onClose, settings, update }: Props) {
           onChange={(v) => update({ climateOverlay: v === 'on' })}
         />
       </div>
+
+      <div className="settings-section-title">Activities</div>
+      <p className="settings-note">
+        Choose which activities appear in “Best Time to Get Outside”. Seasonal ones (like
+        shovelling) only show when the weather calls for them.
+      </p>
+      <ActivityToggles settings={settings} update={update} />
     </Sheet>
+  )
+}
+
+const CATEGORY_ORDER: ActivityCategory[] = [
+  'Fitness',
+  'Yard & Home',
+  'Leisure',
+  'Water',
+  'Seasonal',
+]
+
+function ActivityToggles({
+  settings,
+  update,
+}: {
+  settings: Settings
+  update: (patch: Partial<Settings>) => void
+}) {
+  const enabled = new Set(settings.activities)
+
+  function toggle(id: string) {
+    const next = new Set(enabled)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    update({ activities: [...next] })
+  }
+
+  return (
+    <div className="activities">
+      {CATEGORY_ORDER.map((cat) => {
+        const items = ACTIVITIES.filter((a) => a.category === cat)
+        if (items.length === 0) return null
+        return (
+          <div key={cat} className="activities-group">
+            <div className="activities-cat">{cat}</div>
+            <div className="activities-chips">
+              {items.map((a) => (
+                <button
+                  key={a.id}
+                  className={`activity-chip ${enabled.has(a.id) ? 'active' : ''}`}
+                  onClick={() => toggle(a.id)}
+                  aria-pressed={enabled.has(a.id)}
+                >
+                  <span className="activity-chip-emoji">{a.emoji}</span>
+                  {a.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
