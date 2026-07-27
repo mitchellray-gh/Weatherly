@@ -62,7 +62,7 @@ export function computeBasemap(
       const wx = ((tx % worldTiles) + worldTiles) % worldTiles
       const sub = SUBS[s++ % SUBS.length]
       tiles.push({
-        url: `https://${sub}.basemaps.cartocdn.com/dark_all/${z}/${wx}/${ty}.png`,
+        url: `https://${sub}.basemaps.cartocdn.com/rastertiles/voyager/${z}/${wx}/${ty}.png`,
         dx: ((tx * 256 - pxWest) / spanX) * W,
         dy: ((ty * 256 - pxNorth) / spanY) * H,
         dw: (256 / spanX) * W,

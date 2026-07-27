@@ -25,9 +25,7 @@
   margin: 0 auto;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(90, 130, 170, 0.25), rgba(20, 28, 44, 0.55)),
-    #101726;
+  background: #eae7e0;
 }
 
 .radar-canvas {

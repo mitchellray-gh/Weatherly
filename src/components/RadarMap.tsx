@@ -148,34 +148,32 @@ export function RadarMap({ location }: Props) {
     // Precipitation overlay on top of the map.
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
-    ctx.globalAlpha = 0.78
+    ctx.globalAlpha = 0.72
     ctx.drawImage(buf, 0, 0, w, h)
     ctx.globalAlpha = 1
 
-    // Range rings + crosshair for a radar feel.
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)'
-    ctx.lineWidth = 1
+    // Subtle range rings (light basemap → dark, low-opacity rings).
     const cx = w / 2
     const cy = h / 2
-    for (let r = 1; r <= 3; r++) {
+    ctx.strokeStyle = 'rgba(20,30,50,0.14)'
+    ctx.lineWidth = 1
+    for (let r = 1; r <= 2; r++) {
       ctx.beginPath()
-      ctx.arc(cx, cy, (Math.min(w, h) / 2) * (r / 3), 0, Math.PI * 2)
+      ctx.arc(cx, cy, (Math.min(w, h) / 2) * (r / 2.2), 0, Math.PI * 2)
       ctx.stroke()
     }
-    ctx.beginPath()
-    ctx.moveTo(cx, 0)
-    ctx.lineTo(cx, h)
-    ctx.moveTo(0, cy)
-    ctx.lineTo(w, cy)
-    ctx.stroke()
 
-    // "You are here" marker.
-    ctx.fillStyle = '#2f7fe0'
-    ctx.strokeStyle = '#ffffff'
-    ctx.lineWidth = 2.5
+    // "You are here" marker with a soft halo for contrast on any background.
+    ctx.beginPath()
+    ctx.arc(cx, cy, 11, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.fill()
     ctx.beginPath()
     ctx.arc(cx, cy, 6, 0, Math.PI * 2)
+    ctx.fillStyle = '#2f7fe0'
     ctx.fill()
+    ctx.lineWidth = 2.5
+    ctx.strokeStyle = '#ffffff'
     ctx.stroke()
   }, [data, frame, tiles, expanded])
 
