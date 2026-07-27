@@ -143,6 +143,27 @@ export function RadarMap({ location }: Props) {
     })} · ${rel}`
   }, [data, frame])
 
+  // Fraction of grid cells with measurable precipitation in the current frame.
+  const frameCoverage = useMemo(() => {
+    if (!data) return 0
+    const vals = data.frames[frame]?.values ?? []
+    if (vals.length === 0) return 0
+    const wet = vals.filter((v) => v >= 0.05).length
+    return wet / vals.length
+  }, [data, frame])
+
+  const dryEverywhere = data != null && data.maxValue < 0.05
+
+  // Jump the scrubber to the first frame that actually has precipitation.
+  function jumpToRain() {
+    if (!data) return
+    const idx = data.frames.findIndex((f) => f.values.some((v) => v >= 0.05))
+    if (idx >= 0) {
+      setPlaying(false)
+      setFrame(idx)
+    }
+  }
+
   if (error) {
     return (
       <section className="radar glass">
@@ -166,6 +187,17 @@ export function RadarMap({ location }: Props) {
       <div className="radar-stage">
         <canvas ref={canvasRef} width={320} height={320} className="radar-canvas" />
         {!data && <div className="radar-loading">Loading radar…</div>}
+        {dryEverywhere && (
+          <div className="radar-dry">
+            <span className="radar-dry-emoji">☀️</span>
+            <span>No precipitation expected in the next 7 days</span>
+          </div>
+        )}
+        {data && !dryEverywhere && (
+          <div className="radar-coverage">
+            {frameCoverage > 0 ? `${Math.round(frameCoverage * 100)}% of area` : 'Dry now'}
+          </div>
+        )}
         <div className="radar-scalebar">~120 km across</div>
       </div>
 
@@ -173,7 +205,7 @@ export function RadarMap({ location }: Props) {
         <button
           className="radar-play"
           onClick={() => setPlaying((p) => !p)}
-          disabled={!data}
+          disabled={!data || dryEverywhere}
           aria-label={playing ? 'Pause' : 'Play'}
         >
           {playing ? '❚❚' : '▶'}
@@ -188,7 +220,7 @@ export function RadarMap({ location }: Props) {
             setPlaying(false)
             setFrame(+e.target.value)
           }}
-          disabled={!data}
+          disabled={!data || dryEverywhere}
           aria-label="Radar time"
         />
       </div>
@@ -198,7 +230,13 @@ export function RadarMap({ location }: Props) {
         <span className="radar-legend-bar" />
         <span className="radar-legend-label">Heavy</span>
       </div>
-      <p className="radar-note">Forecast precipitation for your area, out to 7 days.</p>
+      {data && !dryEverywhere ? (
+        <button className="radar-jump" onClick={jumpToRain}>
+          Jump to next precipitation →
+        </button>
+      ) : (
+        <p className="radar-note">Forecast precipitation for your area, out to 7 days.</p>
+      )}
     </section>
   )
 }

@@ -6,6 +6,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
+  overscroll-behavior: contain;
+  touch-action: none;
 }
 
 .sheet {
@@ -48,6 +50,8 @@
 
 .sheet-body {
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
 }
 
 .settings-row {

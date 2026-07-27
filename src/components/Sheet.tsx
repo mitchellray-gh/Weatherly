@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import './Sheet.css'
 
@@ -10,6 +11,16 @@ interface Props {
 }
 
 export function Sheet({ open, title, onClose, children }: Props) {
+  // Lock background scrolling while the sheet is open.
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [open])
+
   return (
     <AnimatePresence>
       {open && (
