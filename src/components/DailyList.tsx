@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { DayPoint, Settings } from '../types'
 import { iconFor } from '../lib/weatherCodes'
 import { cToUnit, formatTemp } from '../lib/units'
@@ -8,12 +9,15 @@ interface Props {
   settings: Settings
 }
 
+const COLLAPSED_COUNT = 7
+
 function weekday(iso: string, i: number): string {
   if (i === 0) return 'Today'
   return new Date(iso + 'T00:00:00').toLocaleDateString([], { weekday: 'short' })
 }
 
 export function DailyList({ daily, settings }: Props) {
+  const [expanded, setExpanded] = useState(false)
   if (daily.length === 0) return null
 
   // Global temperature range across the shown days for consistent bar scaling.
@@ -23,13 +27,16 @@ export function DailyList({ daily, settings }: Props) {
   const hi = Math.max(...maxs)
   const span = Math.max(1, hi - lo)
 
+  const canCollapse = daily.length > COLLAPSED_COUNT
+  const shown = expanded || !canCollapse ? daily : daily.slice(0, COLLAPSED_COUNT)
+
   return (
     <section className="daily glass">
       <h2 className="section-title" style={{ margin: '0 0 6px' }}>
         {daily.length}-Day Forecast
       </h2>
       <ul className="daily-list">
-        {daily.map((d, i) => {
+        {shown.map((d, i) => {
           const dMin = cToUnit(d.tempMin, settings.temperature)
           const dMax = cToUnit(d.tempMax, settings.temperature)
           const left = ((dMin - lo) / span) * 100
@@ -55,6 +62,11 @@ export function DailyList({ daily, settings }: Props) {
           )
         })}
       </ul>
+      {canCollapse && (
+        <button className="daily-toggle" onClick={() => setExpanded((v) => !v)}>
+          {expanded ? 'Show less' : `Show all ${daily.length} days`}
+        </button>
+      )}
     </section>
   )
 }
