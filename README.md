@@ -46,14 +46,38 @@ npm run build    # type-check + production build to dist/
 npm run preview  # preview the production build
 ```
 
-## Deployment (GitHub Pages)
+## Deployment
+
+Weatherly is a fully static single-page app, so it can be hosted on any static host or CDN.
+
+### Vercel (application layer)
+
+Vercel serves the app at the domain root and needs no server component — the app talks to the
+Open-Meteo APIs directly from the browser.
+
+1. Import the repository at [vercel.com/new](https://vercel.com/new).
+2. Configure the project (Vercel auto-detects most of this):
+
+   | Setting               | Value           |
+   | --------------------- | --------------- |
+   | **Framework Preset**  | Vite            |
+   | **Build Command**     | `npm run build` |
+   | **Output Directory**  | `dist`          |
+   | **Install Command**   | `npm install`   |
+
+3. Deploy. No environment variables are required — the Vite config automatically uses a `/`
+   base path on Vercel (it detects the `VERCEL` build variable). To force a specific base on
+   any host, set the `VITE_BASE` environment variable (e.g. `VITE_BASE=/`).
+
+### GitHub Pages
 
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) builds the app and publishes it to
-GitHub Pages on every push to `main`. In the repository, go to **Settings → Pages → Build
-and deployment → Source: GitHub Actions** to enable it.
+GitHub Pages on every push to `main`. In the repository, go to **Settings → Pages → Build and
+deployment → Source: GitHub Actions** to enable it.
 
-The Vite `base` defaults to `/Weatherly/` (correct for `https://<user>.github.io/Weatherly/`).
-Override with the `VITE_BASE` environment variable for other hosts (e.g. `VITE_BASE=/`).
+The Vite `base` defaults to `/Weatherly/` for GitHub Pages (correct for
+`https://<user>.github.io/Weatherly/`). Override with the `VITE_BASE` environment variable for
+other hosts.
 
 ## Data & attribution
 
