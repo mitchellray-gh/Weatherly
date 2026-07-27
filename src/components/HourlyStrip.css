@@ -1,0 +1,46 @@
+.hourly {
+  padding: 16px;
+}
+
+.hourly-scroll {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.hourly-item {
+  flex: 0 0 auto;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.hourly-time {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.hourly-icon {
+  font-size: 22px;
+}
+
+.hourly-pop {
+  font-size: 11px;
+  font-weight: 600;
+  color: #7ec8ff;
+  height: 14px;
+}
+
+.hourly-pop-empty {
+  visibility: hidden;
+}
+
+.hourly-temp {
+  font-size: 18px;
+  font-weight: 500;
+}

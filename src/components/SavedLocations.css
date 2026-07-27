@@ -1,0 +1,45 @@
+.saved {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 2px;
+}
+
+.saved-chip {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 999px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(var(--blur));
+  backdrop-filter: blur(var(--blur));
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.saved-chip.active {
+  background: var(--glass-bg-strong);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.saved-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.saved-x {
+  font-size: 16px;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  color: var(--text-faint);
+  transition: background 0.12s, color 0.12s;
+}
+
+.saved-x:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text);
+}

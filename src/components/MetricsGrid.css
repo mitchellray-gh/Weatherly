@@ -1,0 +1,48 @@
+.metrics {
+  margin-top: 8px;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.metric {
+  padding: 14px 16px;
+  min-height: 108px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-wide {
+  grid-column: span 2;
+}
+
+.metric-value {
+  font-size: 30px;
+  font-weight: 300;
+  margin-top: auto;
+}
+
+.metric-sub {
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+.metric-wind {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+}
+
+@media (min-width: 560px) {
+  .metrics-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .metric-wide {
+    grid-column: span 2;
+  }
+}

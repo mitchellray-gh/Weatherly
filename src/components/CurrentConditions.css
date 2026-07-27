@@ -1,0 +1,59 @@
+.cc {
+  text-align: center;
+  padding: 28px 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cc-place {
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cc-temp {
+  font-size: 96px;
+  font-weight: 200;
+  line-height: 1.05;
+  margin-left: 12px; /* optical balance for the degree glyph */
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.18);
+}
+
+.cc-cond {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cc-icon {
+  font-size: 22px;
+}
+
+.cc-hilo {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cc-feels {
+  color: var(--text-faint);
+}
+
+@media (max-width: 480px) {
+  .cc-temp {
+    font-size: 78px;
+  }
+  .cc-place {
+    font-size: 26px;
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "name": "weatherly",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Weatherly — a beautiful, Apple-inspired weather app with minute, hourly, daily, and up-to-a-year outlooks.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "framer-motion": "^11.11.17",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3"
+  }
+}

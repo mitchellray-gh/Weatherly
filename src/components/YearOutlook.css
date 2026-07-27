@@ -1,0 +1,127 @@
+.year {
+  padding: 16px;
+}
+
+.year-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.year-legend {
+  display: flex;
+  gap: 14px;
+}
+
+.year-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.dot {
+  width: 18px;
+  height: 3px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.dot-forecast {
+  background: #ff9d5c;
+}
+
+.dot-estimate {
+  background: repeating-linear-gradient(90deg, #ff9d5c 0 4px, transparent 4px 8px);
+}
+
+.year-months {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+}
+
+.year-month {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.08);
+  transition: background 0.15s, color 0.15s;
+}
+
+.year-month.active {
+  background: rgba(255, 255, 255, 0.24);
+  color: var(--text);
+}
+
+.year-month-label {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 6px 2px 10px;
+}
+
+.year-disclaimer {
+  font-size: 12px;
+  color: var(--text-faint);
+  line-height: 1.4;
+  margin: 10px 0 2px;
+}
+
+.year-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.year-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.year-cell.estimate {
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+.year-cell.forecast {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.year-cell-num {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.year-cell-swatch {
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+}
+
+.year-cell-temp {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .year-calendar {
+    gap: 4px;
+  }
+  .year-cell-temp {
+    font-size: 11px;
+  }
+}

@@ -1,0 +1,65 @@
+.daily {
+  padding: 8px 16px;
+}
+
+.daily-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.daily-row {
+  display: grid;
+  grid-template-columns: 52px 26px 34px 34px 1fr 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.daily-row:first-child {
+  border-top: none;
+}
+
+.daily-day {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.daily-icon {
+  font-size: 18px;
+  text-align: center;
+}
+
+.daily-pop {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7ec8ff;
+  text-align: center;
+}
+
+.daily-min {
+  font-size: 16px;
+  color: var(--text-faint);
+  text-align: right;
+}
+
+.daily-max {
+  font-size: 16px;
+  text-align: right;
+}
+
+.daily-bar-track {
+  position: relative;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.daily-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #64b5ff, #ffd66b, #ff9d5c);
+}
