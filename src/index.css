@@ -18,31 +18,107 @@
 }
 
 /* ------------------------------------------------------------------ *
- * Book mode — a minimal, monochrome "newspaper" theme for low light.  *
- * No color, no blur, hairline rules, serif-ish reading feel, muted    *
- * (grayscale) icons. Data quality is unchanged; only presentation.    *
+ * Book mode — a crisp, monochrome "front-page" theme for low light.    *
+ * Sans-serif, pure black, no color, no blur. Sections are stacked as   *
+ * one continuous column separated by hairline rules (newspaper feel).  *
+ * Data quality is unchanged; only presentation.                        *
  * ------------------------------------------------------------------ */
 :root[data-theme='book'] {
-  --font: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
-    Georgia, 'Times New Roman', serif;
-  --glass-bg: rgba(255, 255, 255, 0.015);
-  --glass-bg-strong: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.14);
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
+    Arial, system-ui, sans-serif;
+  --glass-bg: transparent;
+  --glass-bg-strong: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.16);
   --glass-shadow: none;
-  --text: rgba(240, 240, 238, 0.96);
-  --text-dim: rgba(220, 220, 216, 0.68);
-  --text-faint: rgba(210, 210, 205, 0.42);
+  --text: rgba(244, 244, 242, 0.98);
+  --text-dim: rgba(224, 224, 220, 0.66);
+  --text-faint: rgba(214, 214, 208, 0.4);
+  --radius: 0px;
+  --radius-sm: 0px;
   --blur: 0px;
-  --accent: rgba(240, 240, 238, 0.96);
+  --accent: rgba(244, 244, 242, 0.98);
 }
 
-/* Flatten the frosted cards into hairline-ruled blocks. */
+:root[data-theme='book'] body {
+  background: #060708;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* One continuous column: collapse card chrome into hairline dividers. */
+:root[data-theme='book'] .stack {
+  gap: 0;
+}
+
+:root[data-theme='book'] .stack > * {
+  border-top: 1px solid var(--glass-border);
+  padding: 20px 4px;
+}
+
 :root[data-theme='book'] .glass {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   box-shadow: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* No top rule above the masthead (current conditions). */
+:root[data-theme='book'] .stack > .cc,
+:root[data-theme='book'] .stack > *:first-child {
+  border-top: none;
+}
+
+/* Metric cards → a hairline grid, like a data table. */
+:root[data-theme='book'] .metrics-grid {
+  gap: 1px;
+  background: var(--glass-border);
+  border: 1px solid var(--glass-border);
+}
+:root[data-theme='book'] .metric.glass {
+  border: none;
+  padding: 14px 16px;
+  background: #060708;
+}
+
+/* Masthead: big condensed numerals, uppercase place name. */
+:root[data-theme='book'] .cc-place {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+:root[data-theme='book'] .cc-temp {
+  font-weight: 300;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+:root[data-theme='book'] .cc-cond {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 13px;
+}
+
+/* Section titles → uppercase, letter-spaced, rule-hugging labels. */
+:root[data-theme='book'] .section-title,
+:root[data-theme='book'] .card-label {
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+/* Tabular numerals throughout so columns line up like print. */
+:root[data-theme='book'] .hourly-temp,
+:root[data-theme='book'] .daily-min,
+:root[data-theme='book'] .daily-max,
+:root[data-theme='book'] .metric-value,
+:root[data-theme='book'] .hourly-pop,
+:root[data-theme='book'] .daily-pop {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Mute emoji/icons to grayscale so the page reads as text, not color. */
@@ -50,24 +126,36 @@
 :root[data-theme='book'] .hourly-icon,
 :root[data-theme='book'] .daily-icon,
 :root[data-theme='book'] .hourly-rainrow-icon,
-:root[data-theme='book'] .metric .card-label,
+:root[data-theme='book'] .radar-collapsed-icon {
+  display: none;
+}
+
 :root[data-theme='book'] .besttime-emoji,
 :root[data-theme='book'] .drill-hero-icon,
 :root[data-theme='book'] .detail-icon,
-:root[data-theme='book'] .radar-collapsed-icon {
-  filter: grayscale(1) brightness(1.6) contrast(0.7);
-  opacity: 0.85;
+:root[data-theme='book'] .toast-icon,
+:root[data-theme='book'] .card-label {
+  filter: grayscale(1) brightness(1.7) contrast(0.6);
+  opacity: 0.75;
+}
+
+/* Force all metric values monochrome (AQI/UV set inline colors otherwise). */
+:root[data-theme='book'] .metric-value,
+:root[data-theme='book'] .detail-value,
+:root[data-theme='book'] .detail-badge {
+  color: var(--text) !important;
+  background: transparent !important;
 }
 
 /* Kill the colored temperature/precip gradients → simple light rules. */
 :root[data-theme='book'] .daily-bar-fill,
 :root[data-theme='book'] .minute-bar-fill {
-  background: rgba(240, 240, 238, 0.85) !important;
+  background: rgba(244, 244, 242, 0.9) !important;
 }
 
 :root[data-theme='book'] .daily-bar-track,
 :root[data-theme='book'] .minute-bar-track {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.09) !important;
 }
 
 :root[data-theme='book'] .hourly-pop,
@@ -85,23 +173,40 @@
   background: transparent !important;
   text-decoration: underline;
   text-underline-offset: 3px;
+  letter-spacing: 0.04em;
 }
 
-/* Section titles get let-spaced small-caps like a masthead. */
-:root[data-theme='book'] .section-title,
-:root[data-theme='book'] .card-label {
-  letter-spacing: 0.14em;
-  font-variant: small-caps;
-  text-transform: none;
+/* Row separators inside daily list become hairlines. */
+:root[data-theme='book'] .daily-row {
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 
-/* Segmented controls → simple bracketed toggles. */
+/* Segmented controls → simple monochrome toggles. */
+:root[data-theme='book'] .seg,
+:root[data-theme='book'] .daily-seg,
+:root[data-theme='book'] .year-window {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+}
+
 :root[data-theme='book'] .seg button.active,
 :root[data-theme='book'] .daily-seg button.active,
 :root[data-theme='book'] .year-window-opt.active,
 :root[data-theme='book'] .year-month.active {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--text);
+  background: rgba(255, 255, 255, 0.92);
+  color: #060708;
+}
+
+/* Top bar / brand as a masthead. */
+:root[data-theme='book'] .brand {
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-weight: 600;
+}
+
+:root[data-theme='book'] .icon-btn {
+  background: transparent;
+  border: 1px solid var(--glass-border);
 }
 
 * {
