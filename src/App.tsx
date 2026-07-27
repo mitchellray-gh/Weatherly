@@ -12,7 +12,7 @@ import { DailyList } from './components/DailyList'
 import { MetricsGrid } from './components/MetricsGrid'
 import { MetricDetailSheet, type DetailTarget } from './components/MetricDetailSheet'
 import { DrillSheet, type Drill } from './components/DrillSheet'
-import { AlertToasts } from './components/Toast'
+import { AlertBanner } from './components/AlertBanner'
 import { YearOutlook } from './components/YearOutlook'
 import { SettingsSheet } from './components/SettingsSheet'
 import { InfoSheet } from './components/InfoSheet'
@@ -127,7 +127,7 @@ export default function App() {
   return (
     <>
       {!book && <Background weatherCode={code} isDay={isDay} />}
-      <AlertToasts alerts={alerts} />
+      <AlertBanner alerts={alerts} />
       <div className="app">
         <div className="topbar">
           <button className="icon-btn glass" onClick={() => setShowInfo(true)} aria-label="About">

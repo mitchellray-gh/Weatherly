@@ -1,0 +1,98 @@
+.alertbanner {
+  position: sticky;
+  top: 0;
+  z-index: 150;
+  width: 100%;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  background: rgba(20, 24, 38, 0.72);
+}
+
+.alertbanner-severe {
+  background: rgba(120, 26, 26, 0.82);
+  border-bottom-color: rgba(255, 90, 80, 0.5);
+}
+
+.alertbanner-warning {
+  background: rgba(120, 78, 16, 0.8);
+  border-bottom-color: rgba(255, 170, 40, 0.45);
+}
+
+.alertbanner-info {
+  background: rgba(24, 46, 74, 0.8);
+  border-bottom-color: rgba(126, 200, 255, 0.4);
+}
+
+.alertbanner-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px calc(9px);
+  padding-top: calc(9px + env(safe-area-inset-top));
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.96);
+  min-height: 0;
+}
+
+.alertbanner-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.alertbanner-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.alertbanner-text strong {
+  font-weight: 600;
+}
+
+.alertbanner-detail {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.alertbanner-dots {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.alertbanner-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.alertbanner-dot.active {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+/* Book mode: flat monochrome banner. */
+:root[data-theme='book'] .alertbanner,
+:root[data-theme='book'] .alertbanner-severe,
+:root[data-theme='book'] .alertbanner-warning,
+:root[data-theme='book'] .alertbanner-info {
+  background: #060708;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-theme='book'] .alertbanner-icon {
+  filter: grayscale(1) brightness(1.7) contrast(0.6);
+  opacity: 0.75;
+}
+
+:root[data-theme='book'] .alertbanner-inner {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 11px;
+}
