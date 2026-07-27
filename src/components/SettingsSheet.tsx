@@ -43,6 +43,7 @@ export function SettingsSheet({ open, onClose, settings, update }: Props) {
           options={[
             { value: 'auto', label: 'Vivid' },
             { value: 'book', label: 'Book' },
+            { value: 'geo', label: 'Geo' },
           ]}
           onChange={(v) => update({ theme: v })}
         />

@@ -108,7 +108,7 @@ export interface AirQuality {
 export type TemperatureUnit = 'celsius' | 'fahrenheit'
 export type WindUnit = 'kmh' | 'mph'
 export type PrecipUnit = 'mm' | 'inch'
-export type Theme = 'auto' | 'book'
+export type Theme = 'auto' | 'book' | 'geo'
 
 export interface Settings {
   temperature: TemperatureUnit

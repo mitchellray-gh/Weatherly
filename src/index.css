@@ -300,6 +300,39 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ------------------------------------------------------------------ *
+ * Geo mode — cards float as frosted glass over the vector scene, with *
+ * diegetic (integrated, airy) typography.                             *
+ * ------------------------------------------------------------------ */
+:root[data-theme='geo'] .glass {
+  background: rgba(16, 20, 34, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+}
+
+:root[data-theme='geo'] .brand,
+:root[data-theme='geo'] .cc-place,
+:root[data-theme='geo'] .section-title {
+  font-weight: 300;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+:root[data-theme='geo'] .cc-place {
+  letter-spacing: 0.14em;
+  font-weight: 400;
+}
+
+:root[data-theme='geo'] .cc-temp {
+  font-weight: 200;
+}
+
+:root[data-theme='geo'] .app {
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.28);
+}
+
 html,
 body,
 #root {
