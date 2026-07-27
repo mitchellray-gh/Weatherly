@@ -23,6 +23,7 @@ export default function App() {
   const { bundle, outlook, loading, outlookLoading, error, refresh } = useWeather(
     active,
     settings.climateOverlay,
+    settings.outlookDays,
   )
   const [showSettings, setShowSettings] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
@@ -53,7 +54,11 @@ export default function App() {
         <DailyList daily={bundle.daily} settings={settings} />
         <MetricsGrid current={bundle.current} today={today} settings={settings} />
         {outlook ? (
-          <YearOutlook outlook={outlook} settings={settings} />
+          <YearOutlook
+            outlook={outlook}
+            settings={settings}
+            onWindowChange={(days) => update({ outlookDays: days })}
+          />
         ) : outlookLoading ? (
           <InlineSkeleton height={360} />
         ) : null}

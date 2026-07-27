@@ -16,6 +16,30 @@
   gap: 14px;
 }
 
+.year-window {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 3px;
+  margin: 12px 0 6px;
+  width: fit-content;
+}
+
+.year-window-opt {
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: background 0.15s, color 0.15s;
+}
+
+.year-window-opt.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1a1f30;
+}
+
 .year-legend-item {
   display: flex;
   align-items: center;

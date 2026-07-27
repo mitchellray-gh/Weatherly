@@ -93,9 +93,12 @@ export async function buildYearOutlook(
     }
 
     const normal = normalForDate(normals, date)
-    // Lead time beyond the forecast horizon widens the band slightly.
-    const leadFactor = Math.min(1, (i - forecast.length) / totalDays)
-    const widen = 1 + leadFactor * 0.6
+    // Lead time beyond the forecast horizon widens the band. Scale by absolute
+    // years out (saturating at ~3 years) so bands are consistent regardless of
+    // the chosen window length.
+    const daysOut = Math.max(0, i - forecast.length)
+    const leadFactor = Math.min(1, daysOut / 365 / 3)
+    const widen = 1 + leadFactor * 0.8
 
     if (normal) {
       let tMax = normal.tempMaxMean

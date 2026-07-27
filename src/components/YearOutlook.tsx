@@ -7,7 +7,16 @@ import './YearOutlook.css'
 interface Props {
   outlook: OutlookDay[]
   settings: Settings
+  onWindowChange: (days: number) => void
 }
+
+const WINDOW_OPTIONS: { label: string; days: number }[] = [
+  { label: '1Y', days: 365 },
+  { label: '2Y', days: 730 },
+  { label: '5Y', days: 1825 },
+  { label: '10Y', days: 3650 },
+  { label: 'Max', days: 8000 },
+]
 
 interface MonthGroup {
   key: string
@@ -30,10 +39,15 @@ function groupByMonth(outlook: OutlookDay[]): MonthGroup[] {
   return groups
 }
 
-export function YearOutlook({ outlook, settings }: Props) {
+export function YearOutlook({ outlook, settings, onWindowChange }: Props) {
   const months = useMemo(() => groupByMonth(outlook), [outlook])
   const [activeIdx, setActiveIdx] = useState(0)
   const active = months[activeIdx]
+
+  const multiYear = useMemo(() => {
+    const years = new Set(outlook.map((d) => d.date.slice(0, 4)))
+    return years.size > 1
+  }, [outlook])
 
   if (!active) return null
 
@@ -68,6 +82,21 @@ export function YearOutlook({ outlook, settings }: Props) {
         </div>
       </div>
 
+      <div className="year-window" role="group" aria-label="Prediction window">
+        {WINDOW_OPTIONS.map((opt) => (
+          <button
+            key={opt.days}
+            className={`year-window-opt ${settings.outlookDays === opt.days ? 'active' : ''}`}
+            onClick={() => {
+              setActiveIdx(0)
+              onWindowChange(opt.days)
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div className="year-months no-scrollbar">
         {months.map((m, i) => (
           <button
@@ -75,7 +104,9 @@ export function YearOutlook({ outlook, settings }: Props) {
             className={`year-month ${i === activeIdx ? 'active' : ''}`}
             onClick={() => setActiveIdx(i)}
           >
-            {m.label.split(' ')[0].slice(0, 3)}
+            {multiYear
+              ? `${m.label.split(' ')[0].slice(0, 3)} '${m.label.split(' ')[1].slice(2)}`
+              : m.label.split(' ')[0].slice(0, 3)}
           </button>
         ))}
       </div>

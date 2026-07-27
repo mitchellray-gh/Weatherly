@@ -101,4 +101,6 @@ export interface Settings {
   wind: WindUnit
   precip: PrecipUnit
   climateOverlay: boolean
+  /** Length of the long-range outlook window, in days. */
+  outlookDays: number
 }

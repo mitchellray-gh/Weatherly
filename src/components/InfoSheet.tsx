@@ -11,7 +11,8 @@ export function InfoSheet({ open, onClose }: Props) {
       <div className="info-body">
         <p>
           Weatherly blends high-resolution weather models to give you minute-by-minute,
-          hourly and daily forecasts, plus an outlook that stretches up to a year ahead.
+          hourly and daily forecasts, plus a long-range outlook you can extend from one
+          year out to more than a decade ahead.
         </p>
         <p>
           <strong>How the long-range outlook works:</strong> real numerical forecasts are

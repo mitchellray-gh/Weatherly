@@ -11,7 +11,11 @@ interface State {
   error: string | null
 }
 
-export function useWeather(location: GeoLocation | undefined, climateOverlay: boolean) {
+export function useWeather(
+  location: GeoLocation | undefined,
+  climateOverlay: boolean,
+  outlookDays: number,
+) {
   const [state, setState] = useState<State>({
     bundle: null,
     outlook: null,
@@ -34,6 +38,7 @@ export function useWeather(location: GeoLocation | undefined, climateOverlay: bo
         try {
           const outlook = await buildYearOutlook(bundle.location, bundle.daily, {
             climateOverlay,
+            totalDays: outlookDays,
           })
           if (id !== reqId.current) return
           setState((s) => ({ ...s, outlook, outlookLoading: false }))
@@ -51,7 +56,7 @@ export function useWeather(location: GeoLocation | undefined, climateOverlay: bo
         }))
       }
     },
-    [climateOverlay],
+    [climateOverlay, outlookDays],
   )
 
   useEffect(() => {

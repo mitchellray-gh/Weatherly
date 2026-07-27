@@ -42,6 +42,7 @@ export const DEFAULT_SETTINGS: Settings = {
   wind: 'mph',
   precip: 'inch',
   climateOverlay: true,
+  outlookDays: 730,
 }
 
 export function degToCompass(deg: number): string {
