@@ -43,8 +43,8 @@ export default function App() {
     document.documentElement.dataset.theme = settings.theme
     if (settings.theme === 'book') {
       // Book mode owns the canvas colour; the gradient Background is not rendered.
-      document.documentElement.style.backgroundColor = '#08090b'
-      document.body.style.backgroundColor = '#08090b'
+      document.documentElement.style.backgroundColor = '#14110b'
+      document.body.style.backgroundColor = '#14110b'
     }
   }, [settings.theme])
 

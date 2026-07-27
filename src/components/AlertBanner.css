@@ -75,13 +75,13 @@
   background: rgba(255, 255, 255, 0.9);
 }
 
-/* Book mode: flat monochrome banner. */
+/* Book mode: flat opaque almanac banner. */
 :root[data-theme='book'] .alertbanner,
 :root[data-theme='book'] .alertbanner-severe,
 :root[data-theme='book'] .alertbanner-warning,
 :root[data-theme='book'] .alertbanner-info {
-  background: #060708;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--paper-inset);
+  border-bottom: 3px double var(--rule-strong);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }

@@ -18,44 +18,58 @@
 }
 
 /* ------------------------------------------------------------------ *
- * Book mode — a crisp, monochrome "front-page" theme for low light.    *
- * Sans-serif, pure black, no color, no blur. Sections are stacked as   *
- * one continuous column separated by hairline rules (newspaper feel).  *
+ * Book mode — a warm, opaque "almanac" theme for low light.            *
+ * Sans-serif, aged-ink palette, ornamental double rules. Every object  *
+ * is fully filled (never transparent) so overlays read cleanly.        *
  * Data quality is unchanged; only presentation.                        *
  * ------------------------------------------------------------------ */
 :root[data-theme='book'] {
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
     Arial, system-ui, sans-serif;
-  --glass-bg: transparent;
-  --glass-bg-strong: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.16);
+  /* Aged ink on dark paper. */
+  --paper: #14110b;
+  --paper-raised: #1b1710;
+  --paper-inset: #100d08;
+  --rule: rgba(214, 199, 168, 0.28);
+  --rule-strong: rgba(214, 199, 168, 0.5);
+  --glass-bg: var(--paper);
+  --glass-bg-strong: var(--paper-raised);
+  --glass-border: var(--rule);
   --glass-shadow: none;
-  --text: rgba(244, 244, 242, 0.98);
-  --text-dim: rgba(224, 224, 220, 0.66);
-  --text-faint: rgba(214, 214, 208, 0.4);
+  --text: rgba(240, 232, 214, 0.98);
+  --text-dim: rgba(226, 216, 194, 0.66);
+  --text-faint: rgba(214, 202, 176, 0.42);
   --radius: 0px;
   --radius-sm: 0px;
   --blur: 0px;
-  --accent: rgba(244, 244, 242, 0.98);
+  --accent: rgba(240, 232, 214, 0.98);
 }
 
 :root[data-theme='book'] body {
-  background: #060708;
+  background: var(--paper);
   -webkit-font-smoothing: antialiased;
 }
 
-/* One continuous column: collapse card chrome into hairline dividers. */
+/* The reading column gets a ruled almanac frame. */
+:root[data-theme='book'] .app {
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+}
+
+/* One continuous column separated by ornamental double rules. */
 :root[data-theme='book'] .stack {
   gap: 0;
 }
 
 :root[data-theme='book'] .stack > * {
-  border-top: 1px solid var(--glass-border);
-  padding: 20px 4px;
+  border-top: 3px double var(--rule);
+  padding: 22px 6px;
+  background: var(--paper);
 }
 
 :root[data-theme='book'] .glass {
-  background: transparent;
+  background: var(--paper);
   border: none;
   border-radius: 0;
   box-shadow: none;
@@ -69,22 +83,22 @@
   border-top: none;
 }
 
-/* Metric cards → a hairline grid, like a data table. */
+/* Metric cards → a ruled almanac data table (opaque cells). */
 :root[data-theme='book'] .metrics-grid {
   gap: 1px;
-  background: var(--glass-border);
-  border: 1px solid var(--glass-border);
+  background: var(--rule);
+  border: 1px solid var(--rule-strong);
 }
 :root[data-theme='book'] .metric.glass {
   border: none;
   padding: 14px 16px;
-  background: #060708;
+  background: var(--paper-raised);
 }
 
-/* Masthead: big condensed numerals, uppercase place name. */
+/* Masthead: framed, centered, almanac title-block feel. */
 :root[data-theme='book'] .cc-place {
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   font-size: 20px;
   font-weight: 600;
 }
@@ -97,12 +111,30 @@
 
 :root[data-theme='book'] .cc-cond {
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   font-size: 13px;
 }
 
-/* Section titles → uppercase, letter-spaced, rule-hugging labels. */
-:root[data-theme='book'] .section-title,
+/* Section titles → centered small-caps headers flanked by rules. */
+:root[data-theme='book'] .section-title {
+  text-align: center;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--text-dim);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+:root[data-theme='book'] .section-title::before,
+:root[data-theme='book'] .section-title::after {
+  content: '';
+  flex: 1;
+  height: 0;
+  border-top: 1px solid var(--rule);
+}
+
 :root[data-theme='book'] .card-label {
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -147,15 +179,15 @@
   background: transparent !important;
 }
 
-/* Kill the colored temperature/precip gradients → simple light rules. */
+/* Kill the colored temperature/precip gradients → warm ink rules. */
 :root[data-theme='book'] .daily-bar-fill,
 :root[data-theme='book'] .minute-bar-fill {
-  background: rgba(244, 244, 242, 0.9) !important;
+  background: rgba(226, 210, 178, 0.92) !important;
 }
 
 :root[data-theme='book'] .daily-bar-track,
 :root[data-theme='book'] .minute-bar-track {
-  background: rgba(255, 255, 255, 0.09) !important;
+  background: var(--paper-inset) !important;
 }
 
 :root[data-theme='book'] .hourly-pop,
@@ -163,7 +195,7 @@
   color: var(--text-dim);
 }
 
-/* Accent-blue links/buttons become plain light text with an underline. */
+/* Accent-blue links/buttons become plain ink text with an underline. */
 :root[data-theme='book'] .daily-toggle,
 :root[data-theme='book'] .radar-jump,
 :root[data-theme='book'] .sheet-close,
@@ -178,35 +210,89 @@
 
 /* Row separators inside daily list become hairlines. */
 :root[data-theme='book'] .daily-row {
-  border-top-color: rgba(255, 255, 255, 0.08);
+  border-top-color: var(--rule);
 }
 
-/* Segmented controls → simple monochrome toggles. */
+/* Segmented controls → filled almanac toggles. */
 :root[data-theme='book'] .seg,
 :root[data-theme='book'] .daily-seg,
 :root[data-theme='book'] .year-window {
-  background: transparent;
-  border: 1px solid var(--glass-border);
+  background: var(--paper-inset);
+  border: 1px solid var(--rule);
 }
 
 :root[data-theme='book'] .seg button.active,
 :root[data-theme='book'] .daily-seg button.active,
 :root[data-theme='book'] .year-window-opt.active,
 :root[data-theme='book'] .year-month.active {
-  background: rgba(255, 255, 255, 0.92);
-  color: #060708;
+  background: rgba(226, 210, 178, 0.92);
+  color: var(--paper);
 }
 
-/* Top bar / brand as a masthead. */
+/* Top bar / brand as an almanac title. */
 :root[data-theme='book'] .brand {
   text-transform: uppercase;
-  letter-spacing: 0.32em;
-  font-weight: 600;
+  letter-spacing: 0.34em;
+  font-weight: 700;
 }
 
 :root[data-theme='book'] .icon-btn {
-  background: transparent;
-  border: 1px solid var(--glass-border);
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+}
+
+/* --- Opaque overlays: sheets, search, chips (never see-through). --- */
+:root[data-theme='book'] .sheet-backdrop {
+  background: rgba(6, 5, 3, 0.7);
+}
+:root[data-theme='book'] .sheet {
+  background: var(--paper);
+  border-top: 3px double var(--rule-strong);
+  border-left: 1px solid var(--rule);
+  border-right: 1px solid var(--rule);
+}
+:root[data-theme='book'] .sheet-grip {
+  background: var(--rule-strong);
+}
+:root[data-theme='book'] .search-field,
+:root[data-theme='book'] .search-results,
+:root[data-theme='book'] .saved-chip {
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+}
+:root[data-theme='book'] .search-results li button:hover,
+:root[data-theme='book'] .saved-chip.active {
+  background: var(--paper-inset);
+}
+:root[data-theme='book'] .drill-row,
+:root[data-theme='book'] .drill-stat,
+:root[data-theme='book'] .drill-hour,
+:root[data-theme='book'] .detail-stat,
+:root[data-theme='book'] .detail-pollutant,
+:root[data-theme='book'] .detail-trend,
+:root[data-theme='book'] .besttime,
+:root[data-theme='book'] .radar-stage,
+:root[data-theme='book'] .minute-bar-track {
+  background: var(--paper-raised);
+}
+:root[data-theme='book'] .drill-row-top {
+  background: var(--paper-inset);
+}
+:root[data-theme='book'] .drill-hour:hover,
+:root[data-theme='book'] .drill-row:hover {
+  background: var(--paper-inset);
+}
+:root[data-theme='book'] .radar-play,
+:root[data-theme='book'] .radar-zoom button {
+  background: var(--paper-raised);
+  color: var(--text);
+  border: 1px solid var(--rule);
+  box-shadow: none;
+}
+:root[data-theme='book'] .drill-badge[data-tier],
+:root[data-theme='book'] .besttime-badge[data-tier] {
+  background: transparent !important;
+  color: var(--text) !important;
 }
 
 * {
