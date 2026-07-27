@@ -7,6 +7,7 @@ import { CurrentConditionsView } from './components/CurrentConditions'
 import { NextRain } from './components/NextRain'
 import { BestTimes } from './components/BestTimes'
 import { MinuteCast } from './components/MinuteCast'
+import { RadarMap } from './components/RadarMap'
 import { HourlyStrip } from './components/HourlyStrip'
 import { DailyList } from './components/DailyList'
 import { MetricsGrid } from './components/MetricsGrid'
@@ -76,6 +77,7 @@ export default function App() {
           onOpen={(activity) => setDrill({ kind: 'activity', activity })}
         />
         <MinuteCast minutely={bundle.minutely} settings={settings} />
+        <RadarMap location={bundle.location} />
         <HourlyStrip
           hourly={bundle.hourly}
           settings={settings}
