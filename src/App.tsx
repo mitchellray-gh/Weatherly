@@ -85,8 +85,10 @@ export default function App() {
         />
         <DailyList
           daily={bundle.daily}
+          extension={outlook ?? undefined}
           settings={settings}
           onSelect={(date) => setDrill({ kind: 'day', date })}
+          onSelectEstimate={(day) => setDrill({ kind: 'outlook', day })}
         />
         <MetricsGrid
           current={bundle.current}
