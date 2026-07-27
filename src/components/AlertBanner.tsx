@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
 import type { WeatherAlert } from '../lib/alerts'
 import './AlertBanner.css'
 
@@ -7,58 +5,42 @@ interface Props {
   alerts: WeatherAlert[]
 }
 
-/** A slim, non-intrusive live banner across the very top of the app. If
- *  several alerts are active it cycles through them one at a time. */
+/** A continuous stock-ticker style banner across the very top of the app.
+ *  All active alerts scroll by so nothing is ever truncated. */
 export function AlertBanner({ alerts }: Props) {
-  const [index, setIndex] = useState(0)
-
-  // Reset to the first alert whenever the active set changes (e.g. new location).
-  const signature = alerts.map((a) => a.id).join('|')
-  useEffect(() => {
-    setIndex(0)
-  }, [signature])
-
-  // Rotate through multiple alerts.
-  useEffect(() => {
-    if (alerts.length < 2) return
-    const id = window.setInterval(() => {
-      setIndex((i) => (i + 1) % alerts.length)
-    }, 5000)
-    return () => window.clearInterval(id)
-  }, [alerts.length])
-
   if (alerts.length === 0) return null
 
-  const active = alerts[Math.min(index, alerts.length - 1)]
+  // Highest severity present drives the banner tint.
+  const rank = { severe: 3, warning: 2, info: 1 } as const
+  const level = alerts.reduce<WeatherAlert['level']>(
+    (max, a) => (rank[a.level] > rank[max] ? a.level : max),
+    'info',
+  )
+
+  const run = (
+    <>
+      {alerts.map((a) => (
+        <span className="ticker-item" key={a.id}>
+          <span className="ticker-icon">{a.icon}</span>
+          <strong>{a.title}</strong>
+          <span className="ticker-detail">{a.detail}</span>
+          <span className="ticker-sep" aria-hidden>
+            •
+          </span>
+        </span>
+      ))}
+    </>
+  )
 
   return (
-    <div className={`alertbanner alertbanner-${active.level}`} role="status" aria-live="polite">
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={active.id}
-          className="alertbanner-inner"
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 6 }}
-          transition={{ duration: 0.28 }}
-        >
-          <span className="alertbanner-icon">{active.icon}</span>
-          <span className="alertbanner-text">
-            <strong>{active.title}</strong>
-            <span className="alertbanner-detail"> — {active.detail}</span>
-          </span>
-          {alerts.length > 1 && (
-            <span className="alertbanner-dots" aria-hidden>
-              {alerts.map((a, i) => (
-                <span
-                  key={a.id}
-                  className={`alertbanner-dot ${i === index ? 'active' : ''}`}
-                />
-              ))}
-            </span>
-          )}
-        </motion.div>
-      </AnimatePresence>
+    <div className={`alertbanner alertbanner-${level}`} role="status" aria-live="polite">
+      <div className="ticker">
+        {/* Two identical runs give a seamless infinite loop. */}
+        <div className="ticker-track">
+          {run}
+          <span aria-hidden>{run}</span>
+        </div>
+      </div>
     </div>
   )
 }
