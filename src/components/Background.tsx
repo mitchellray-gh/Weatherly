@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { gradientFor } from '../lib/weatherCodes'
 
@@ -10,6 +11,13 @@ interface Props {
 export function Background({ weatherCode, isDay }: Props) {
   const [a, b, c] = gradientFor(weatherCode, isDay)
   const gradient = `linear-gradient(160deg, ${a} 0%, ${b} 48%, ${c} 100%)`
+
+  // Match the page canvas (html) to the gradient's bottom colour so any
+  // overscroll or area beyond the fixed layer never shows a dark strip.
+  useEffect(() => {
+    document.documentElement.style.backgroundColor = c
+    document.body.style.backgroundColor = c
+  }, [c])
 
   return (
     <motion.div

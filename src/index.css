@@ -34,6 +34,7 @@ body {
   color: var(--text);
   background: #0b1026;
   overflow-x: hidden;
+  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
