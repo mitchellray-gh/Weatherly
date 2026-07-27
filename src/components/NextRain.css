@@ -1,0 +1,37 @@
+.nextrain {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+}
+
+.nextrain-icon {
+  font-size: 30px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.nextrain-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nextrain-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.nextrain-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.nextrain.raining {
+  border-color: rgba(126, 200, 255, 0.5);
+}
+
+.nextrain.dry .nextrain-sub {
+  color: var(--text-faint);
+}

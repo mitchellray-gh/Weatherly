@@ -4,6 +4,7 @@ import { Background } from './components/Background'
 import { SearchBar } from './components/SearchBar'
 import { SavedLocations } from './components/SavedLocations'
 import { CurrentConditionsView } from './components/CurrentConditions'
+import { NextRain } from './components/NextRain'
 import { MinuteCast } from './components/MinuteCast'
 import { HourlyStrip } from './components/HourlyStrip'
 import { DailyList } from './components/DailyList'
@@ -47,6 +48,12 @@ export default function App() {
           location={bundle.location}
           current={bundle.current}
           today={today}
+          settings={settings}
+        />
+        <NextRain
+          minutely={bundle.minutely}
+          hourly={bundle.hourly}
+          currentPrecip={bundle.current.precipitation}
           settings={settings}
         />
         <MinuteCast minutely={bundle.minutely} settings={settings} />
