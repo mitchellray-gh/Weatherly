@@ -30,15 +30,15 @@ interface Keyframe extends SceneColors {
 // Multi-stop color matrix for the full cycle.
 const MATRIX: Keyframe[] = [
   {
-    // Midnight — deep indigo, black silhouettes, glowing vector moon.
+    // Midnight — deep indigo, layered blue silhouettes, glowing vector moon.
     t: 0.0,
     skyTop: '#0a0e24',
-    skyMid: '#141a3a',
-    skyBottom: '#243056',
-    l0: '#04050c',
-    l1: '#0a0f20',
-    l2: '#141d38',
-    l3: '#20294c',
+    skyMid: '#182246',
+    skyBottom: '#33436e',
+    l0: '#080c1c',
+    l1: '#152036',
+    l2: '#233459',
+    l3: '#2f426b',
     orb: '#d3dcff',
     orbGlow: 'rgba(180,200,255,0.55)',
     stars: 1,
@@ -93,12 +93,12 @@ const MATRIX: Keyframe[] = [
     // Back to midnight (loop close).
     t: 1.0,
     skyTop: '#0a0e24',
-    skyMid: '#141a3a',
-    skyBottom: '#243056',
-    l0: '#04050c',
-    l1: '#0a0f20',
-    l2: '#141d38',
-    l3: '#20294c',
+    skyMid: '#182246',
+    skyBottom: '#33436e',
+    l0: '#080c1c',
+    l1: '#152036',
+    l2: '#233459',
+    l3: '#2f426b',
     orb: '#d3dcff',
     orbGlow: 'rgba(180,200,255,0.55)',
     stars: 1,

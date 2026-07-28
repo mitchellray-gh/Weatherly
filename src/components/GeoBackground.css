@@ -93,42 +93,114 @@
     transform: translateX(420%);
   }
 }
-
 /* Silhouette planes */
 .geo-layer {
   position: absolute;
   bottom: 0;
-  left: -15%;
-  width: 130%;
+  left: -25%;
+  width: 150%;
   transition: fill 1.5s linear;
+  will-change: transform;
+  /* Rim light: a hairline of sky-glow along each ridge so the geometry reads
+     at every hour (the drop-shadow follows the silhouette's top edges). */
+  filter: drop-shadow(0 -1px 0 rgba(255, 255, 255, 0.16));
 }
 .geo-layer path,
-.geo-layer polygon {
+.geo-layer polygon,
+.geo-layer rect,
+.geo-layer circle {
   transition: fill 1.5s linear;
 }
 
-/* Parallax: foreground fastest, horizon slowest, skybox static. */
+/*
+ * Parallax: foreground planes translate fastest, the far horizon slowest.
+ * A gentle vertical lift (--geo-lift) makes the land sink as you travel
+ * upward through the journey, reinforcing the 2.5-D glide.
+ */
 .geo-l3 {
-  height: 26%;
-  transform: translateX(calc(var(--geo-x) * -0.02px));
+  height: 42%;
+  transform: translate3d(calc(var(--geo-x) * -0.03px), calc(var(--geo-lift) * 10px), 0);
 }
 .geo-l2 {
-  height: 34%;
-  transform: translateX(calc(var(--geo-x) * -0.05px));
+  height: 50%;
+  transform: translate3d(calc(var(--geo-x) * -0.08px), calc(var(--geo-lift) * 20px), 0);
 }
 .geo-l1 {
-  height: 24%;
-  transform: translateX(calc(var(--geo-x) * -0.1px));
+  height: 40%;
+  transform: translate3d(calc(var(--geo-x) * -0.16px), calc(var(--geo-lift) * 34px), 0);
 }
 .geo-l0 {
-  height: 17%;
-  transform: translateX(calc(var(--geo-x) * -0.2px));
+  height: 30%;
+  transform: translate3d(calc(var(--geo-x) * -0.3px), calc(var(--geo-lift) * 52px), 0);
+}
+
+/* Hot-air balloon drifting slowly (day). */
+.geo-balloon {
+  position: absolute;
+  top: 20%;
+  left: 12%;
+  width: 30px;
+  height: 45px;
+  animation: geo-balloon-drift 60s ease-in-out infinite alternate;
+}
+@keyframes geo-balloon-drift {
+  from {
+    transform: translate(0, 0);
+  }
+  to {
+    transform: translate(58vw, -18px);
+  }
+}
+
+/* Birds gliding across the middle distance. */
+.geo-birds {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  width: 40%;
+  height: 8%;
+  animation: geo-birds-fly 42s linear infinite;
+}
+@keyframes geo-birds-fly {
+  from {
+    transform: translateX(-45%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+
+/* Shooting star (night). */
+.geo-shoot {
+  opacity: 0;
+  animation: geo-shoot 14s ease-in infinite;
+}
+@keyframes geo-shoot {
+  0%,
+  86% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  88% {
+    opacity: 0.9;
+  }
+  94% {
+    opacity: 0;
+    transform: translate(22px, 12px);
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .geo-cloud-a,
   .geo-cloud-b,
+  .geo-balloon,
+  .geo-birds,
+  .geo-shoot,
   .geo-stars circle {
     animation: none;
   }
 }
+

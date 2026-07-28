@@ -25,6 +25,10 @@
   align-items: center;
   gap: 10px;
 }
+/* When the alert ticker is present, drop the header below it. */
+.geo-header--banner {
+  top: calc(50px + env(safe-area-inset-top));
+}
 .geo-search {
   flex: 1;
   min-width: 0;
@@ -38,6 +42,9 @@
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 0 16px;
+}
+.geo-saved--banner {
+  top: calc(106px + env(safe-area-inset-top));
 }
 
 .topbar {

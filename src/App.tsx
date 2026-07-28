@@ -135,7 +135,7 @@ export default function App() {
       {geo && bundle ? (
         // Immersive "journey through the data" — geometric, scene-by-scene.
         <div className="geo-shell">
-          <div className="geo-header">
+          <div className={`geo-header ${alerts.length ? 'geo-header--banner' : ''}`}>
             <div className="geo-search">
               <SearchBar onSelect={addLocation} />
             </div>
@@ -148,7 +148,7 @@ export default function App() {
             </button>
           </div>
           {locations.length > 1 && (
-            <div className="geo-saved">
+            <div className={`geo-saved ${alerts.length ? 'geo-saved--banner' : ''}`}>
               <SavedLocations
                 locations={locations}
                 activeId={activeId}
