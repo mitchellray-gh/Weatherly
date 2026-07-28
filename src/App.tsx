@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Background } from './components/Background'
 import { GeoBackground } from './components/GeoBackground'
+import { GeoJourney } from './components/GeoJourney'
 import { SearchBar } from './components/SearchBar'
 import { SavedLocations } from './components/SavedLocations'
 import { CurrentConditionsView } from './components/CurrentConditions'
@@ -130,35 +131,71 @@ export default function App() {
       {!book && !geo && <Background weatherCode={code} isDay={isDay} />}
       {geo && <GeoBackground timezone={bundle?.location.timezone} />}
       <AlertBanner alerts={alerts} />
-      <div className="app">
-        <div className="topbar">
-          <button className="icon-btn glass" onClick={() => setShowInfo(true)} aria-label="About">
-            ℹ︎
-          </button>
-          <div className="brand">Weatherly</div>
-          <button
-            className="icon-btn glass"
-            onClick={() => setShowSettings(true)}
-            aria-label="Settings"
-          >
-            ⚙︎
-          </button>
+
+      {geo && bundle ? (
+        // Immersive "journey through the data" — geometric, scene-by-scene.
+        <div className="geo-shell">
+          <div className="geo-header">
+            <div className="geo-search">
+              <SearchBar onSelect={addLocation} />
+            </div>
+            <button
+              className="icon-btn glass"
+              onClick={() => setShowSettings(true)}
+              aria-label="Settings"
+            >
+              ⚙︎
+            </button>
+          </div>
+          {locations.length > 1 && (
+            <div className="geo-saved">
+              <SavedLocations
+                locations={locations}
+                activeId={activeId}
+                onSelect={setActiveId}
+                onRemove={removeLocation}
+              />
+            </div>
+          )}
+          <GeoJourney
+            bundle={bundle}
+            settings={settings}
+            onSelectHour={(time) => setDrill({ kind: 'hour', time })}
+            onSelectDay={(date) => setDrill({ kind: 'day', date })}
+            onSelectMetric={setDetail}
+          />
         </div>
+      ) : (
+        <div className="app">
+          <div className="topbar">
+            <button className="icon-btn glass" onClick={() => setShowInfo(true)} aria-label="About">
+              ℹ︎
+            </button>
+            <div className="brand">Weatherly</div>
+            <button
+              className="icon-btn glass"
+              onClick={() => setShowSettings(true)}
+              aria-label="Settings"
+            >
+              ⚙︎
+            </button>
+          </div>
 
-        <SearchBar onSelect={addLocation} />
-        <SavedLocations
-          locations={locations}
-          activeId={activeId}
-          onSelect={setActiveId}
-          onRemove={removeLocation}
-        />
+          <SearchBar onSelect={addLocation} />
+          <SavedLocations
+            locations={locations}
+            activeId={activeId}
+            onSelect={setActiveId}
+            onRemove={removeLocation}
+          />
 
-        {content}
+          {content}
 
-        <footer className="footer">
-          Data by Open-Meteo · Forecast to 16 days, climate estimates beyond
-        </footer>
-      </div>
+          <footer className="footer">
+            Data by Open-Meteo · Forecast to 16 days, climate estimates beyond
+          </footer>
+        </div>
+      )}
 
       <SettingsSheet
         open={showSettings}

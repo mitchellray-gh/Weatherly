@@ -1,0 +1,278 @@
+.gj {
+  position: relative;
+  height: 100svh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+}
+.gj::-webkit-scrollbar {
+  display: none;
+}
+
+.gj-scene {
+  scroll-snap-align: start;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px 26px 90px;
+  gap: 14px;
+  position: relative;
+}
+
+.gj-chapter {
+  position: absolute;
+  top: calc(64px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Scene 1 — NOW */
+.gj-place {
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+}
+.gj-bigtemp {
+  font-size: clamp(90px, 34vw, 168px);
+  font-weight: 100;
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  margin-left: 0.06em;
+}
+.gj-cond {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.86);
+}
+.gj-sub {
+  font-size: 15px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.66);
+}
+.gj-dot-sep {
+  margin: 0 8px;
+  opacity: 0.5;
+}
+
+/* Scene 2 — ARC */
+.gj-arc-svg {
+  width: min(88vw, 340px);
+  height: auto;
+}
+.gj-arc-times {
+  display: flex;
+  gap: 34px;
+  align-items: flex-end;
+}
+.gj-arc-mid {
+  padding: 0 4px;
+}
+.gj-arc-num {
+  font-size: 20px;
+  font-weight: 200;
+  letter-spacing: 0.02em;
+}
+.gj-arc-cap {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+}
+
+/* Scene 3 — HOURS RIDGE */
+.gj-ridge {
+  width: min(92vw, 360px);
+  height: auto;
+}
+.gj-ridge-node {
+  cursor: pointer;
+}
+.gj-ridge-temp {
+  fill: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-weight: 300;
+}
+.gj-ridge-hour {
+  fill: rgba(255, 255, 255, 0.5);
+  font-size: 9px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+.gj-hint {
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+/* Scene 4 — DAYS RANGE */
+.gj-days-range {
+  position: relative;
+  width: min(92vw, 380px);
+  height: 220px;
+  display: flex;
+  margin-bottom: 34px;
+}
+.gj-day-col {
+  position: relative;
+  height: 100%;
+  cursor: pointer;
+  background: transparent;
+}
+.gj-day-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 3px;
+  min-height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 180, 140, 0.95),
+    rgba(255, 235, 180, 0.9),
+    rgba(160, 210, 255, 0.95)
+  );
+}
+.gj-day-hi,
+.gj-day-lo {
+  position: absolute;
+  left: 0;
+  right: 0;
+  font-size: 12px;
+  font-weight: 300;
+  transform: translateY(-140%);
+}
+.gj-day-lo {
+  transform: translateY(20%);
+  color: rgba(255, 255, 255, 0.55);
+}
+.gj-day-name {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  right: 0;
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* Scene 5 — AIR GAUGES */
+.gj-gauges {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 26px 40px;
+}
+.gj-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  cursor: pointer;
+}
+.gj-gauge-svg {
+  width: 84px;
+  height: 84px;
+}
+.gj-gauge-center {
+  fill: rgba(255, 255, 255, 0.95);
+  font-size: 16px;
+  font-weight: 200;
+}
+.gj-gauge-label {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+.gj-end {
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.34);
+  margin-top: 10px;
+}
+
+/* Progress rail */
+.gj-rail {
+  position: fixed;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.gj-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  transition: background 0.3s, transform 0.3s;
+}
+.gj-dot.active {
+  background: rgba(255, 255, 255, 0.95);
+  transform: scale(1.35);
+}
+.gj-dot-label {
+  display: none;
+}
+
+/* Continue chevron */
+.gj-next {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: gj-bob 2.4s ease-in-out infinite;
+}
+@keyframes gj-bob {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gj {
+    scroll-snap-type: none;
+  }
+  .gj-next {
+    animation: none;
+  }
+}

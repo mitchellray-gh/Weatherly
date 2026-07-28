@@ -7,6 +7,39 @@
   gap: 14px;
 }
 
+/* Geo journey: immersive full-screen shell with a floating header. */
+.geo-shell {
+  position: relative;
+  height: 100svh;
+}
+.geo-header {
+  position: fixed;
+  top: calc(10px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 45;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.geo-search {
+  flex: 1;
+  min-width: 0;
+}
+.geo-saved {
+  position: fixed;
+  top: calc(66px + env(safe-area-inset-top));
+  left: 0;
+  right: 0;
+  z-index: 44;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
 .topbar {
   display: flex;
   align-items: center;
