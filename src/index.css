@@ -301,36 +301,215 @@
 }
 
 /* ------------------------------------------------------------------ *
- * Geo mode — cards float as frosted glass over the vector scene, with *
- * diegetic (integrated, airy) typography.                             *
+ * Geo mode — the Atmospheric Vector aesthetic applied to every data    *
+ * object. Airy open geometry: ultra-light type, generous spacing,      *
+ * hairline strokes, rounded/pill forms, translucent floating cards.    *
  * ------------------------------------------------------------------ */
-:root[data-theme='geo'] .glass {
-  background: rgba(16, 20, 34, 0.34);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.22);
+:root[data-theme='geo'] {
+  --font: 'Inter', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Helvetica Neue', system-ui, sans-serif;
+  --glass-bg: rgba(18, 22, 38, 0.3);
+  --glass-bg-strong: rgba(24, 30, 50, 0.42);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 12px 44px rgba(0, 0, 0, 0.22);
+  --text: rgba(255, 255, 255, 0.98);
+  --text-dim: rgba(255, 255, 255, 0.72);
+  --text-faint: rgba(255, 255, 255, 0.48);
+  --radius: 30px;
+  --radius-sm: 22px;
+  --blur: 22px;
 }
 
+/* Global airy typography: light weights, open tracking. */
+:root[data-theme='geo'] body {
+  font-weight: 300;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+:root[data-theme='geo'] .app {
+  text-shadow: 0 1px 20px rgba(0, 0, 0, 0.26);
+  gap: 20px;
+}
+
+/* Floating frosted cards with soft, rounded geometry and breathing room. */
+:root[data-theme='geo'] .glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(150%);
+  backdrop-filter: blur(var(--blur)) saturate(150%);
+  box-shadow: var(--glass-shadow);
+}
+:root[data-theme='geo'] .hourly,
+:root[data-theme='geo'] .daily,
+:root[data-theme='geo'] .minute,
+:root[data-theme='geo'] .radar {
+  padding: 22px 20px;
+}
+
+/* Headings & masthead — thin, wide, uppercase, integrated into the sky. */
 :root[data-theme='geo'] .brand,
-:root[data-theme='geo'] .cc-place,
 :root[data-theme='geo'] .section-title {
   font-weight: 300;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+:root[data-theme='geo'] .cc-place {
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+:root[data-theme='geo'] .cc-temp {
+  font-weight: 100;
+  letter-spacing: -0.02em;
+}
+:root[data-theme='geo'] .cc-cond,
+:root[data-theme='geo'] .cc-hilo {
+  font-weight: 300;
+  letter-spacing: 0.08em;
+}
+
+/* Metric grid → airy, gap-separated rounded tiles (no hard table lines). */
+:root[data-theme='geo'] .metrics-grid {
+  gap: 14px;
+}
+:root[data-theme='geo'] .metric.glass {
+  border-radius: var(--radius-sm);
+  padding: 18px;
+}
+:root[data-theme='geo'] .metric-value {
+  font-weight: 200;
+}
+:root[data-theme='geo'] .card-label {
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+/* Hourly + daily rows: light numerals, hairline dividers, rounded hovers. */
+:root[data-theme='geo'] .hourly-temp,
+:root[data-theme='geo'] .daily-min,
+:root[data-theme='geo'] .daily-max {
+  font-weight: 300;
+}
+:root[data-theme='geo'] .hourly-time,
+:root[data-theme='geo'] .daily-day {
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+:root[data-theme='geo'] .daily-row {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Temperature bars → thin translucent capsules with a soft light fill. */
+:root[data-theme='geo'] .daily-bar-track,
+:root[data-theme='geo'] .minute-bar-track {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-radius: 999px;
+}
+:root[data-theme='geo'] .daily-bar-fill {
+  background: linear-gradient(
+    90deg,
+    rgba(160, 210, 255, 0.9),
+    rgba(255, 235, 180, 0.9),
+    rgba(255, 180, 140, 0.9)
+  ) !important;
+}
+
+/* Pills, chips, toggles → fully rounded, hairline, airy. */
+:root[data-theme='geo'] .seg,
+:root[data-theme='geo'] .daily-seg,
+:root[data-theme='geo'] .year-window,
+:root[data-theme='geo'] .saved-chip,
+:root[data-theme='geo'] .search-field {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+}
+:root[data-theme='geo'] .seg button,
+:root[data-theme='geo'] .daily-seg button,
+:root[data-theme='geo'] .year-window-opt {
+  border-radius: 999px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+:root[data-theme='geo'] .seg button.active,
+:root[data-theme='geo'] .daily-seg button.active,
+:root[data-theme='geo'] .year-window-opt.active,
+:root[data-theme='geo'] .year-month.active {
+  background: rgba(255, 255, 255, 0.92);
+  color: #14203a;
+  font-weight: 500;
+}
+:root[data-theme='geo'] .year-month {
+  border-radius: 999px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+}
+
+/* Icon buttons & round controls stay perfectly circular. */
+:root[data-theme='geo'] .icon-btn,
+:root[data-theme='geo'] .radar-play,
+:root[data-theme='geo'] .radar-zoom button {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  box-shadow: none;
+}
+
+/* Best-time & drill cards → rounded, translucent, generous. */
+:root[data-theme='geo'] .besttime,
+:root[data-theme='geo'] .drill-row,
+:root[data-theme='geo'] .drill-stat,
+:root[data-theme='geo'] .drill-hour,
+:root[data-theme='geo'] .detail-stat,
+:root[data-theme='geo'] .detail-pollutant,
+:root[data-theme='geo'] .detail-trend,
+:root[data-theme='geo'] .activity-chip {
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+:root[data-theme='geo'] .activity-chip {
+  border-radius: 999px;
+}
+:root[data-theme='geo'] .besttime-title,
+:root[data-theme='geo'] .drill-row-title {
+  font-weight: 300;
+  letter-spacing: 0.03em;
+}
+:root[data-theme='geo'] .besttime-badge,
+:root[data-theme='geo'] .drill-badge {
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+/* Sheets float up as rounded glass panels over the scene. */
+:root[data-theme='geo'] .sheet {
+  background: rgba(18, 22, 38, 0.72);
+  border-radius: 32px 32px 0 0;
+  border: 1px solid var(--glass-border);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+}
+:root[data-theme='geo'] .sheet-head h2 {
+  font-weight: 300;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
-:root[data-theme='geo'] .cc-place {
-  letter-spacing: 0.14em;
-  font-weight: 400;
+/* Alert ticker joins the atmosphere (translucent, hairline). */
+:root[data-theme='geo'] .alertbanner {
+  background: rgba(18, 22, 38, 0.5);
+  border-bottom: 1px solid var(--glass-border);
 }
-
-:root[data-theme='geo'] .cc-temp {
-  font-weight: 200;
-}
-
-:root[data-theme='geo'] .app {
-  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.28);
+:root[data-theme='geo'] .ticker-item {
+  font-weight: 300;
+  letter-spacing: 0.03em;
 }
 
 html,
