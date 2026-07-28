@@ -4,6 +4,7 @@ import './GeoBackground.css'
 
 interface Props {
   timezone?: string
+  weatherCode?: number
 }
 
 /**
@@ -12,7 +13,7 @@ interface Props {
  * 24-hour sky gradient with a moving sun/moon that lights the structures and
  * casts long shadows. Parallax planes slide at stepped speeds as you travel.
  */
-export function GeoBackground({ timezone }: Props) {
+export function GeoBackground({ timezone, weatherCode }: Props) {
   const [tod, setTod] = useState(() => localDayFraction(timezone))
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -180,6 +181,29 @@ export function GeoBackground({ timezone }: Props) {
     [],
   )
 
+  // Weather-reactive geometric precipitation: diamond rain streaks or drifting
+  // spinning snow shapes, keyed to the current WMO weather code.
+  const precip = useMemo<'rain' | 'snow' | null>(() => {
+    const c = weatherCode
+    if (c == null) return null
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow'
+    if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82) || (c >= 95 && c <= 99)) return 'rain'
+    return null
+  }, [weatherCode])
+
+  const drops = useMemo(
+    () =>
+      Array.from({ length: 34 }, (_, i) => ({
+        x: (i * 29.7 + 5) % 100,
+        delay: (i % 11) * 0.28 + Math.random() * 0.4,
+        dur: 0.7 + ((i * 7) % 6) / 10,
+        s: 6 + ((i * 5) % 7),
+        drift: ((i % 5) - 2) * 6,
+        rot: (i % 2 ? 1 : -1) * (180 + (i % 3) * 120),
+      })),
+    [],
+  )
+
   // Point string for a regular polygon centered in a 100×100 box.
   function poly(sides: number, r = 46): string {
     return Array.from({ length: sides }, (_, i) => {
@@ -206,6 +230,25 @@ export function GeoBackground({ timezone }: Props) {
 
       {/* Spinning geometric constellation — low-poly wireframes at varied depths */}
       <div className="geo-shapes">
+        {/* Constellation connector lines linking nearby shapes into a figure. */}
+        <svg className="geo-constellation" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {shapes.map((s, i) => {
+            const next = shapes[(i + 1) % shapes.length]
+            return (
+              <line
+                key={i}
+                x1={s.x}
+                y1={s.y}
+                x2={next.x}
+                y2={next.y}
+                stroke="rgba(255,255,255,0.12)"
+                strokeWidth="0.25"
+                strokeDasharray="1.5 2"
+                vectorEffect="non-scaling-stroke"
+              />
+            )
+          })}
+        </svg>
         {shapes.map((s, i) => (
           <svg
             key={i}
@@ -298,6 +341,29 @@ export function GeoBackground({ timezone }: Props) {
           </g>
         ))}
       </svg>
+
+      {/* Weather-reactive geometric precipitation */}
+      {precip && (
+        <div className={`geo-precip geo-precip--${precip}`}>
+          {drops.map((d, i) => (
+            <span
+              key={i}
+              className="geo-drop"
+              style={
+                {
+                  left: `${d.x}%`,
+                  width: precip === 'snow' ? d.s : Math.max(2, d.s * 0.35),
+                  height: precip === 'snow' ? d.s : d.s * 2.4,
+                  '--pdur': `${precip === 'snow' ? d.dur * 4 : d.dur}s`,
+                  '--pdelay': `${d.delay}s`,
+                  '--pdrift': `${precip === 'snow' ? d.drift * 2 : d.drift}px`,
+                  '--prot': `${d.rot}deg`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
 
 
       {/* Star field (night) */}
