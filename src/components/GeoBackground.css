@@ -6,6 +6,8 @@
   --geo-x: 0;
   --geo-rim: 0.3;
   --geo-shadow: 0.2;
+  --geo-tilt-x: 0;
+  --geo-tilt-y: 0;
   pointer-events: none;
   transition: background 1.5s linear;
 }
@@ -243,19 +245,35 @@
  */
 .geo-l3 {
   height: 42%;
-  transform: translate3d(calc(var(--geo-x) * -0.03px), calc(var(--geo-lift) * 10px), 0);
+  transform: translate3d(
+    calc(var(--geo-x) * -0.03px + var(--geo-tilt-x) * 6px),
+    calc(var(--geo-lift) * 10px + var(--geo-tilt-y) * 4px),
+    0
+  );
 }
 .geo-l2 {
   height: 50%;
-  transform: translate3d(calc(var(--geo-x) * -0.08px), calc(var(--geo-lift) * 20px), 0);
+  transform: translate3d(
+    calc(var(--geo-x) * -0.08px + var(--geo-tilt-x) * 11px),
+    calc(var(--geo-lift) * 20px + var(--geo-tilt-y) * 7px),
+    0
+  );
 }
 .geo-l1 {
   height: 40%;
-  transform: translate3d(calc(var(--geo-x) * -0.16px), calc(var(--geo-lift) * 34px), 0);
+  transform: translate3d(
+    calc(var(--geo-x) * -0.16px + var(--geo-tilt-x) * 18px),
+    calc(var(--geo-lift) * 34px + var(--geo-tilt-y) * 11px),
+    0
+  );
 }
 .geo-l0 {
   height: 30%;
-  transform: translate3d(calc(var(--geo-x) * -0.3px), calc(var(--geo-lift) * 52px), 0);
+  transform: translate3d(
+    calc(var(--geo-x) * -0.3px + var(--geo-tilt-x) * 28px),
+    calc(var(--geo-lift) * 52px + var(--geo-tilt-y) * 16px),
+    0
+  );
 }
 
 /* Hot-air balloon drifting slowly (day). */
@@ -328,6 +346,164 @@
   .geo-lantern,
   .geo-rays,
   .geo-stars circle {
+    animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Geometric constellation — spinning wireframe polygons with 2.5-D    */
+/* parallax tilt bound to each shape's depth.                          */
+/* ------------------------------------------------------------------ */
+.geo-shapes {
+  position: absolute;
+  inset: 0;
+  opacity: 0.9;
+}
+.geo-shape {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  translate: calc(var(--geo-tilt-x) * var(--sd) * 40px)
+    calc(var(--geo-tilt-y) * var(--sd) * 40px);
+  transition: translate 0.2s ease-out;
+  will-change: transform, translate;
+  animation: geo-shape-bob calc(var(--spin) * 0.4) ease-in-out infinite alternate;
+}
+.geo-shape polygon {
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
+  animation: geo-shape-spin var(--spin) linear infinite;
+}
+.geo-shape polygon:nth-child(2) {
+  animation-direction: reverse;
+  animation-duration: calc(var(--spin) * 0.7);
+}
+@keyframes geo-shape-spin {
+  to {
+    transform: rotate(calc(var(--dir) * 360deg));
+  }
+}
+@keyframes geo-shape-bob {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Sun lens flares — geometric star, cross-glint, halo ring, and beads */
+/* ------------------------------------------------------------------ */
+.geo-flare {
+  position: absolute;
+  inset: -140%;
+  pointer-events: none;
+}
+.geo-flare-star {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(255, 246, 220, 0.55) 3deg,
+    transparent 8deg,
+    transparent 82deg,
+    rgba(255, 246, 220, 0.55) 90deg,
+    transparent 98deg,
+    transparent 172deg,
+    rgba(255, 246, 220, 0.55) 180deg,
+    transparent 188deg,
+    transparent 262deg,
+    rgba(255, 246, 220, 0.55) 270deg,
+    transparent 278deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 60%);
+  mask-image: radial-gradient(circle, #000 0%, transparent 60%);
+  animation: geo-flare-pulse 5s ease-in-out infinite, geo-rays-spin 120s linear infinite;
+}
+.geo-flare-cross {
+  background: conic-gradient(
+    from 45deg,
+    transparent 0deg,
+    rgba(255, 240, 200, 0.35) 2deg,
+    transparent 6deg,
+    transparent 84deg,
+    rgba(255, 240, 200, 0.35) 90deg,
+    transparent 94deg,
+    transparent 174deg,
+    rgba(255, 240, 200, 0.35) 180deg,
+    transparent 184deg,
+    transparent 264deg,
+    rgba(255, 240, 200, 0.35) 270deg,
+    transparent 274deg,
+    transparent 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 52%);
+  mask-image: radial-gradient(circle, #000 0%, transparent 52%);
+  animation: geo-flare-pulse 5s ease-in-out infinite 1.2s,
+    geo-rays-spin 90s linear infinite reverse;
+}
+.geo-flare-ring {
+  position: absolute;
+  inset: -70%;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 246, 220, 0.4);
+  box-shadow: inset 0 0 18px rgba(255, 246, 220, 0.25);
+  animation: geo-flare-ringpulse 6s ease-in-out infinite;
+}
+@keyframes geo-flare-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.06);
+  }
+}
+@keyframes geo-flare-ringpulse {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.12);
+  }
+}
+.geo-flarebeads {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.5s linear;
+}
+.geo-bead {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, rgba(255, 246, 220, 0.6), transparent 70%);
+  animation: geo-flare-pulse 5s ease-in-out infinite;
+}
+.geo-bead.sm {
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.8s;
+}
+.geo-bead.xs {
+  width: 9px;
+  height: 9px;
+  animation-delay: 1.6s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .geo-shape,
+  .geo-shape polygon,
+  .geo-flare-star,
+  .geo-flare-cross,
+  .geo-flare-ring,
+  .geo-bead {
     animation: none;
   }
 }

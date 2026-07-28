@@ -38,6 +38,9 @@ export function GeoBackground({ timezone }: Props) {
       const y = readY()
       el.style.setProperty('--geo-x', String(y))
       el.style.setProperty('--geo-lift', String(Math.min(1, y / 4000)))
+      // Scroll velocity spins the geometric shapes faster where the user lingers
+      // and interacts — the journey reacts to the traveller's momentum.
+      el.style.setProperty('--geo-scroll', String((y % 2000) / 2000))
     }
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(apply)
@@ -53,6 +56,40 @@ export function GeoBackground({ timezone }: Props) {
     return () => {
       window.clearTimeout(retry)
       scroller.removeEventListener('scroll', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  // Pointer / device tilt drives a true 2.5-D parallax — planes and geometric
+  // shapes shift on separate depth axes as you move, giving the flat vectors
+  // volume and life.
+  useEffect(() => {
+    const el = rootRef.current
+    if (!el) return
+    let raf = 0
+    let tx = 0
+    let ty = 0
+    const write = () => {
+      raf = 0
+      el.style.setProperty('--geo-tilt-x', tx.toFixed(3))
+      el.style.setProperty('--geo-tilt-y', ty.toFixed(3))
+    }
+    const onMove = (e: PointerEvent) => {
+      tx = (e.clientX / window.innerWidth - 0.5) * 2
+      ty = (e.clientY / window.innerHeight - 0.5) * 2
+      if (!raf) raf = requestAnimationFrame(write)
+    }
+    const onTilt = (e: DeviceOrientationEvent) => {
+      if (e.gamma == null || e.beta == null) return
+      tx = Math.max(-1, Math.min(1, e.gamma / 30))
+      ty = Math.max(-1, Math.min(1, (e.beta - 45) / 30))
+      if (!raf) raf = requestAnimationFrame(write)
+    }
+    window.addEventListener('pointermove', onMove, { passive: true })
+    window.addEventListener('deviceorientation', onTilt)
+    return () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('deviceorientation', onTilt)
       if (raf) cancelAnimationFrame(raf)
     }
   }, [])
@@ -109,6 +146,29 @@ export function GeoBackground({ timezone }: Props) {
     [],
   )
 
+  // Floating geometric constellation — spinning low-poly wireframe shapes that
+  // live at different parallax depths and rotate continuously, giving the flat
+  // scene a lively, generative, 2.5-D machine-drawn quality.
+  const shapes = useMemo(
+    () =>
+      [
+        { sides: 3, x: 16, y: 24, size: 62, depth: 0.12, dur: 44, dir: 1 },
+        { sides: 6, x: 82, y: 30, size: 90, depth: 0.2, dur: 74, dir: -1 },
+        { sides: 4, x: 71, y: 15, size: 42, depth: 0.32, dur: 30, dir: 1 },
+        { sides: 5, x: 28, y: 46, size: 54, depth: 0.44, dur: 58, dir: -1 },
+        { sides: 8, x: 54, y: 22, size: 32, depth: 0.52, dur: 38, dir: 1 },
+      ] as const,
+    [],
+  )
+
+  // Point string for a regular polygon centered in a 100×100 box.
+  function poly(sides: number, r = 46): string {
+    return Array.from({ length: sides }, (_, i) => {
+      const a = (i / sides) * Math.PI * 2 - Math.PI / 2
+      return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`
+    }).join(' ')
+  }
+
   return (
     <div ref={rootRef} className="geo" aria-hidden style={styleVars}>
       {/* Layer 4 — static skybox gradient */}
@@ -116,6 +176,44 @@ export function GeoBackground({ timezone }: Props) {
 
       {/* Sunlight / moonlight wash centered on the orb */}
       <div className="geo-lightwash" />
+
+      {/* Spinning geometric constellation — low-poly wireframes at varied depths */}
+      <div className="geo-shapes">
+        {shapes.map((s, i) => (
+          <svg
+            key={i}
+            className="geo-shape"
+            viewBox="0 0 100 100"
+            style={
+              {
+                left: `${s.x}%`,
+                top: `${s.y}%`,
+                width: s.size,
+                height: s.size,
+                '--sd': s.depth,
+                '--spin': `${s.dur}s`,
+                '--dir': s.dir,
+              } as React.CSSProperties
+            }
+          >
+            <polygon
+              points={poly(s.sides)}
+              fill="none"
+              stroke="rgba(255,255,255,0.5)"
+              strokeWidth="1.1"
+              vectorEffect="non-scaling-stroke"
+            />
+            <polygon
+              points={poly(s.sides, 24)}
+              fill="rgba(255,255,255,0.06)"
+              stroke="rgba(255,255,255,0.28)"
+              strokeWidth="0.7"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        ))}
+      </div>
+
 
       {/* Star field (night) */}
       <svg className="geo-stars" viewBox="0 0 100 60" preserveAspectRatio="none">
@@ -138,7 +236,30 @@ export function GeoBackground({ timezone }: Props) {
       >
         {/* faint sun rays at high elevation */}
         {light.elevation > 0.35 && <span className="geo-rays" />}
+        {/* geometric lens-flare streaks that pulse and slowly counter-rotate */}
+        {dayness > 0.4 && (
+          <>
+            <span className="geo-flare geo-flare-star" />
+            <span className="geo-flare geo-flare-cross" />
+            <span className="geo-flare-ring" />
+          </>
+        )}
       </div>
+
+      {/* Diegetic lens-flare beads streaking from the orb toward the corner */}
+      {dayness > 0.4 && (
+        <div className="geo-flarebeads" style={{ opacity: dayness * 0.7 }}>
+          <span className="geo-bead" style={{ left: `${orbX}%`, top: `${orbY}%` }} />
+          <span
+            className="geo-bead sm"
+            style={{ left: `${(orbX + 50) / 2}%`, top: `${(orbY + 50) / 2}%` }}
+          />
+          <span
+            className="geo-bead xs"
+            style={{ left: `${(orbX + 50 * 2) / 3}%`, top: `${(orbY + 50 * 2) / 3}%` }}
+          />
+        </div>
+      )}
 
       {/* Clouds, balloon, and bird flock (day) */}
       <div className="geo-clouds" style={{ opacity: dayness }}>

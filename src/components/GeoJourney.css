@@ -194,6 +194,12 @@
     rgba(255, 235, 180, 0.9),
     rgba(160, 210, 255, 0.95)
   );
+  transition: width 0.2s, box-shadow 0.2s;
+}
+.gj-day-col:hover .gj-day-bar,
+.gj-day-col:focus-visible .gj-day-bar {
+  width: 5px;
+  box-shadow: 0 0 12px rgba(255, 225, 170, 0.7);
 }
 .gj-day-hi,
 .gj-day-lo {
@@ -335,14 +341,53 @@
   gap: 26px 40px;
 }
 .gj-gauge {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   background: transparent;
   cursor: pointer;
+  transition: transform 0.2s;
+}
+.gj-gauge:hover {
+  transform: scale(1.06);
+}
+.gj-gauge:active {
+  transform: scale(0.94);
+}
+/* A slowly spinning geometric tick-ring wraps every gauge. */
+.gj-gauge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 92px;
+  height: 92px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(
+      from 0deg,
+      rgba(255, 255, 255, 0.22) 0deg 1.4deg,
+      transparent 1.4deg 30deg
+    );
+  -webkit-mask-image: radial-gradient(circle, transparent 46%, #000 47%, #000 50%, transparent 51%);
+  mask-image: radial-gradient(circle, transparent 46%, #000 47%, #000 50%, transparent 51%);
+  animation: gj-gauge-spin 40s linear infinite;
+  pointer-events: none;
+}
+.gj-gauge:nth-child(even)::before {
+  animation-direction: reverse;
+  animation-duration: 54s;
+}
+@keyframes gj-gauge-spin {
+  to {
+    transform: translateX(-50%) rotate(360deg);
+  }
 }
 .gj-gauge-svg {
+  position: relative;
   width: 84px;
   height: 84px;
 }
@@ -390,6 +435,26 @@
   background: rgba(255, 255, 255, 0.95);
   transform: scale(1.35);
 }
+/* Active chapter pulses a guiding halo so the eye follows the journey. */
+.gj-dot.active::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  animation: gj-dot-ping 2.4s ease-out infinite;
+}
+@keyframes gj-dot-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
 .gj-dot-label {
   display: none;
 }
@@ -412,6 +477,26 @@
   backdrop-filter: blur(12px);
   animation: gj-bob 2.4s ease-in-out infinite;
 }
+/* Guiding pulse ring invites the traveller onward. */
+.gj-next::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  animation: gj-next-ping 2.4s ease-out infinite;
+}
+@keyframes gj-next-ping {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.8;
+  }
+  70%,
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
 @keyframes gj-bob {
   0%,
   100% {
@@ -426,7 +511,11 @@
   .gj {
     scroll-snap-type: none;
   }
-  .gj-next {
+  .gj-next,
+  .gj-next::after,
+  .gj-dot.active::after,
+  .gj-gauge::before,
+  .gj-wp-halo {
     animation: none;
   }
 }
