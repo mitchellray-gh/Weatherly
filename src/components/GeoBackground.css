@@ -357,7 +357,7 @@
 .geo-shapes {
   position: absolute;
   inset: 0;
-  opacity: 0.9;
+  opacity: 0.32;
 }
 .geo-shape {
   position: absolute;
@@ -384,10 +384,10 @@
 }
 @keyframes geo-shape-bob {
   from {
-    opacity: 0.55;
+    opacity: 0.35;
   }
   to {
-    opacity: 1;
+    opacity: 0.7;
   }
 }
 
@@ -453,22 +453,22 @@
 @keyframes geo-flare-pulse {
   0%,
   100% {
-    opacity: 0.35;
+    opacity: 0.18;
     transform: scale(0.92);
   }
   50% {
-    opacity: 0.85;
+    opacity: 0.45;
     transform: scale(1.06);
   }
 }
 @keyframes geo-flare-ringpulse {
   0%,
   100% {
-    opacity: 0.2;
+    opacity: 0.1;
     transform: scale(0.9);
   }
   50% {
-    opacity: 0.55;
+    opacity: 0.28;
     transform: scale(1.12);
   }
 }
@@ -479,11 +479,11 @@
 }
 .geo-bead {
   position: absolute;
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(circle, rgba(255, 246, 220, 0.6), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 246, 220, 0.35), transparent 70%);
   animation: geo-flare-pulse 5s ease-in-out infinite;
 }
 .geo-bead.sm {

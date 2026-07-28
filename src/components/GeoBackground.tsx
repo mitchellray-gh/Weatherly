@@ -199,15 +199,15 @@ export function GeoBackground({ timezone }: Props) {
             <polygon
               points={poly(s.sides)}
               fill="none"
-              stroke="rgba(255,255,255,0.5)"
-              strokeWidth="1.1"
+              stroke="rgba(255,255,255,0.32)"
+              strokeWidth="1"
               vectorEffect="non-scaling-stroke"
             />
             <polygon
               points={poly(s.sides, 24)}
-              fill="rgba(255,255,255,0.06)"
-              stroke="rgba(255,255,255,0.28)"
-              strokeWidth="0.7"
+              fill="rgba(255,255,255,0.03)"
+              stroke="rgba(255,255,255,0.16)"
+              strokeWidth="0.6"
               vectorEffect="non-scaling-stroke"
             />
           </svg>
