@@ -165,6 +165,18 @@ export function OutlookChart({ days, settings, onSelectDay }: Props) {
             onClick={() => onSelectDay(d)}
           />
         ))}
+
+      {/* In-chart legend so the two lines are always labelled */}
+      <g transform={`translate(${PAD.left + 4}, ${PAD.top - 6})`}>
+        <line x1={0} x2={16} y1={0} y2={0} stroke="#ff9d5c" strokeWidth="2.5" strokeLinecap="round" />
+        <text x={20} y={3} fontSize="10" fill="rgba(255,255,255,0.75)">
+          High
+        </text>
+        <line x1={54} x2={70} y1={0} y2={0} stroke="#64b5ff" strokeWidth="2.5" strokeLinecap="round" />
+        <text x={74} y={3} fontSize="10" fill="rgba(255,255,255,0.75)">
+          Low
+        </text>
+      </g>
     </svg>
   )
 }
