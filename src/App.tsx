@@ -46,9 +46,15 @@ export default function App() {
       document.documentElement.style.backgroundColor = '#14110b'
       document.body.style.backgroundColor = '#14110b'
     } else if (settings.theme === 'geo') {
-      // Geo mode: the vector scene fills the canvas; keep a neutral fallback.
+      // Geo mode: the fixed vector scene (z-index:-2) fills the canvas. Only the
+      // <html> element may carry the fallback colour — if <body> gets an opaque
+      // background it paints *above* the negative-z scene and hides it.
       document.documentElement.style.backgroundColor = '#141a3a'
-      document.body.style.backgroundColor = '#141a3a'
+      document.body.style.backgroundColor = 'transparent'
+    } else {
+      // Vivid mode: the gradient <Background> owns the canvas; clear overrides.
+      document.documentElement.style.backgroundColor = ''
+      document.body.style.backgroundColor = ''
     }
   }, [settings.theme])
 
