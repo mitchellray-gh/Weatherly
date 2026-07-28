@@ -4,6 +4,7 @@ import type { MetricKey } from '../lib/metricDefs'
 import { cToUnit, degToCompass, formatTemp, formatWind } from '../lib/units'
 import { describe } from '../lib/weatherCodes'
 import { activitySuggestions, scoreLabel } from '../lib/activity'
+import { GeoRadar } from './GeoRadar'
 import './GeoJourney.css'
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
   onSelectPlace: () => void
 }
 
-const CHAPTERS = ['Now', "Today's Arc", 'The Hours', 'The Days', 'Moments', 'The Air'] as const
+const CHAPTERS = ['Now', "Today's Arc", 'The Hours', 'The Days', 'Moments', 'The Air', 'Storms'] as const
 
 export function GeoJourney({
   bundle,
@@ -71,6 +72,7 @@ export function GeoJourney({
       <DaysScene bundle={bundle} settings={settings} onSelectDay={onSelectDay} />
       <MomentsScene bundle={bundle} settings={settings} onSelectActivity={onSelectActivity} />
       <AirScene bundle={bundle} settings={settings} onSelectMetric={onSelectMetric} />
+      <GeoRadar location={bundle.location} active={active === 6} />
 
       {/* Journey progress rail */}
       <nav className="gj-rail" aria-label="Journey chapters">
@@ -567,7 +569,6 @@ function AirScene({
           </button>
         )}
       </div>
-      <div className="gj-end">— end of the journey —</div>
     </section>
   )
 }

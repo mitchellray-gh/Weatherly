@@ -1,0 +1,125 @@
+.gj-radar {
+  gap: 16px;
+}
+
+.gjr-wrap {
+  position: relative;
+  width: min(94vw, 460px);
+  height: min(56vh, 420px);
+  border-radius: 26px;
+  overflow: hidden;
+  background: radial-gradient(
+    120% 100% at 50% 12%,
+    rgba(40, 60, 110, 0.5),
+    rgba(12, 18, 40, 0.62) 70%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  touch-action: none;
+  cursor: grab;
+}
+.gjr-wrap:active {
+  cursor: grabbing;
+}
+
+.gjr-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.gjr-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.gjr-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(12, 18, 40, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+
+.gjr-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: min(94vw, 460px);
+}
+.gjr-play {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.gjr-play:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+.gjr-play:active {
+  transform: scale(0.92);
+}
+
+.gjr-scrub {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  outline: none;
+  cursor: pointer;
+}
+.gjr-scrub::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  box-shadow: 0 0 10px rgba(150, 200, 255, 0.8);
+  cursor: pointer;
+}
+.gjr-scrub::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: #eaf2ff;
+  box-shadow: 0 0 10px rgba(150, 200, 255, 0.8);
+  cursor: pointer;
+}
+
+.gjr-time {
+  flex: 0 0 auto;
+  min-width: 118px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
