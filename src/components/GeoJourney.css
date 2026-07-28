@@ -39,6 +39,35 @@
   }
 }
 
+/* Tappable text elements read as plain type with a gentle press state. */
+.gj-tap {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.gj-tap:hover {
+  opacity: 0.82;
+}
+.gj-tap:active {
+  transform: scale(0.97);
+}
+.gj-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+}
+.gj-arc-tap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
 .gj-chapter {
   position: absolute;
   top: calc(64px + env(safe-area-inset-top));

@@ -13,6 +13,8 @@ interface Props {
   onSelectDay: (date: string) => void
   onSelectMetric: (m: MetricKey) => void
   onSelectActivity: (id: string) => void
+  onSelectSun: () => void
+  onSelectPlace: () => void
 }
 
 const CHAPTERS = ['Now', "Today's Arc", 'The Hours', 'The Days', 'Moments', 'The Air'] as const
@@ -24,6 +26,8 @@ export function GeoJourney({
   onSelectDay,
   onSelectMetric,
   onSelectActivity,
+  onSelectSun,
+  onSelectPlace,
 }: Props) {
   const [active, setActive] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -54,8 +58,15 @@ export function GeoJourney({
 
   return (
     <div className="gj" ref={rootRef}>
-      <NowScene bundle={bundle} settings={settings} />
-      <ArcScene bundle={bundle} settings={settings} />
+      <NowScene
+        bundle={bundle}
+        settings={settings}
+        onSelectPlace={onSelectPlace}
+        onSelectHour={onSelectHour}
+        onSelectMetric={onSelectMetric}
+        onSelectDay={onSelectDay}
+      />
+      <ArcScene bundle={bundle} settings={settings} onSelectSun={onSelectSun} />
       <HoursScene bundle={bundle} settings={settings} onSelectHour={onSelectHour} />
       <DaysScene bundle={bundle} settings={settings} onSelectDay={onSelectDay} />
       <MomentsScene bundle={bundle} settings={settings} onSelectActivity={onSelectActivity} />
@@ -86,24 +97,50 @@ export function GeoJourney({
 
 // --- Scene 1: NOW ------------------------------------------------------
 
-function NowScene({ bundle, settings }: { bundle: WeatherBundle; settings: Settings }) {
+function NowScene({
+  bundle,
+  settings,
+  onSelectPlace,
+  onSelectHour,
+  onSelectMetric,
+  onSelectDay,
+}: {
+  bundle: WeatherBundle
+  settings: Settings
+  onSelectPlace: () => void
+  onSelectHour: (time: string) => void
+  onSelectMetric: (m: MetricKey) => void
+  onSelectDay: (date: string) => void
+}) {
   const c = bundle.current
   const today = bundle.daily[0]
   const place = [bundle.location.name, bundle.location.admin1].filter(Boolean).join(', ')
+  const nowHour = bundle.hourly[0]?.time
   return (
     <section className="gj-scene gj-now" data-i={0}>
       <div className="gj-chapter">Now</div>
-      <div className="gj-place">{place || 'Current Location'}</div>
-      <div className="gj-bigtemp">{formatTemp(c.temperature, settings.temperature)}</div>
-      <div className="gj-cond">{describe(c.weatherCode)}</div>
+      <button className="gj-place gj-tap" onClick={onSelectPlace}>
+        {place || 'Current Location'}
+      </button>
+      <button
+        className="gj-bigtemp gj-tap"
+        onClick={() => nowHour && onSelectHour(nowHour)}
+      >
+        {formatTemp(c.temperature, settings.temperature)}
+      </button>
+      <button className="gj-cond gj-tap" onClick={() => nowHour && onSelectHour(nowHour)}>
+        {describe(c.weatherCode)}
+      </button>
       <div className="gj-sub">
-        Feels {formatTemp(c.apparentTemperature, settings.temperature)}
+        <button className="gj-tap gj-sub-btn" onClick={() => onSelectMetric('feels')}>
+          Feels {formatTemp(c.apparentTemperature, settings.temperature)}
+        </button>
         {today && (
-          <>
+          <button className="gj-tap gj-sub-btn" onClick={() => onSelectDay(today.date)}>
             <span className="gj-dot-sep">·</span>
             {formatTemp(today.tempMax, settings.temperature)} /{' '}
             {formatTemp(today.tempMin, settings.temperature)}
-          </>
+          </button>
         )}
       </div>
     </section>
@@ -112,7 +149,15 @@ function NowScene({ bundle, settings }: { bundle: WeatherBundle; settings: Setti
 
 // --- Scene 2: TODAY'S ARC (geometric sun path) -------------------------
 
-function ArcScene({ bundle, settings }: { bundle: WeatherBundle; settings: Settings }) {
+function ArcScene({
+  bundle,
+  settings,
+  onSelectSun,
+}: {
+  bundle: WeatherBundle
+  settings: Settings
+  onSelectSun: () => void
+}) {
   const today = bundle.daily[0]
   if (!today) return null
   const now = Date.now()
@@ -140,7 +185,8 @@ function ArcScene({ bundle, settings }: { bundle: WeatherBundle; settings: Setti
   return (
     <section className="gj-scene gj-arc" data-i={1}>
       <div className="gj-chapter">Today&rsquo;s Arc</div>
-      <svg className="gj-arc-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Sun path">
+      <button className="gj-arc-tap gj-tap" onClick={onSelectSun}>
+        <svg className="gj-arc-svg" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Sun path">
         <defs>
           <linearGradient id="gj-arc-grad" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="rgba(255,255,255,0.25)" />
@@ -184,6 +230,7 @@ function ArcScene({ bundle, settings }: { bundle: WeatherBundle; settings: Setti
           <div className="gj-arc-cap">Sunset</div>
         </div>
       </div>
+      </button>
       <div className="gj-sub">
         High {formatTemp(today.tempMax, settings.temperature)} · Low{' '}
         {formatTemp(today.tempMin, settings.temperature)}
@@ -510,8 +557,15 @@ function AirScene({
         />
       </div>
       <div className="gj-sub">
-        {Math.round(c.pressure)} hPa
-        {c.visibility != null && <> · {Math.round(c.visibility / 1000)} km visibility</>}
+        <button className="gj-tap gj-sub-btn" onClick={() => onSelectMetric('pressure')}>
+          {Math.round(c.pressure)} hPa
+        </button>
+        {c.visibility != null && (
+          <button className="gj-tap gj-sub-btn" onClick={() => onSelectMetric('visibility')}>
+            <span className="gj-dot-sep">·</span>
+            {Math.round(c.visibility / 1000)} km visibility
+          </button>
+        )}
       </div>
       <div className="gj-end">— end of the journey —</div>
     </section>

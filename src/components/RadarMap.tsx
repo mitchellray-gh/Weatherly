@@ -7,6 +7,7 @@ import './RadarMap.css'
 
 interface Props {
   location: GeoLocation
+  onOpenDetail?: () => void
 }
 
 const BUF = 72 // interpolation buffer resolution (BUF x BUF)
@@ -34,7 +35,7 @@ function bilinear(data: RadarData, frameIdx: number, gx: number, gy: number): nu
   return top + (bot - top) * fy
 }
 
-export function RadarMap({ location }: Props) {
+export function RadarMap({ location, onOpenDetail }: Props) {
   const [data, setData] = useState<RadarData | null>(null)
   const [error, setError] = useState(false)
   const [frame, setFrame] = useState(0)
@@ -392,6 +393,11 @@ export function RadarMap({ location }: Props) {
         <button className="radar-jump" onClick={jumpToRain}>
           Jump to next precipitation →
         </button>
+        {onOpenDetail && (
+          <button className="radar-hide" onClick={onOpenDetail}>
+            Rain timeline
+          </button>
+        )}
         {!rainSoon && (
           <button className="radar-hide" onClick={() => setExpanded(false)}>
             Hide map

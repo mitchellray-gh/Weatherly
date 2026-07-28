@@ -114,7 +114,7 @@ export function YearOutlook({ outlook, settings, onWindowChange, onSelectDay }: 
 
       <div className="year-month-label">{active.label}</div>
 
-      <OutlookChart days={active.days} settings={settings} />
+      <OutlookChart days={active.days} settings={settings} onSelectDay={onSelectDay} />
 
       {hasEstimates && (
         <p className="year-disclaimer">

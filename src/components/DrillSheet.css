@@ -5,6 +5,29 @@
   padding-bottom: 8px;
 }
 
+.drill-alert-level {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.drill-alert-severe {
+  background: rgba(255, 69, 58, 0.24);
+  color: #ffb3ad;
+}
+.drill-alert-warning {
+  background: rgba(255, 159, 10, 0.22);
+  color: #ffd79a;
+}
+.drill-alert-info {
+  background: rgba(126, 200, 255, 0.22);
+  color: #cfe9ff;
+}
+
 .drill-lead {
   font-size: 15px;
   line-height: 1.5;

@@ -8,30 +8,45 @@ interface Props {
   current: CurrentConditions
   today: DayPoint | undefined
   settings: Settings
+  onPlace: () => void
+  onNow: () => void
+  onFeels: () => void
+  onToday: () => void
 }
 
-export function CurrentConditionsView({ location, current, today, settings }: Props) {
+export function CurrentConditionsView({
+  location,
+  current,
+  today,
+  settings,
+  onPlace,
+  onNow,
+  onFeels,
+  onToday,
+}: Props) {
   const place = [location.name, location.admin1].filter(Boolean).join(', ')
   return (
     <header className="cc">
-      <div className="cc-place">{place || 'Current Location'}</div>
-      <div className="cc-temp">
+      <button className="cc-place cc-tap" onClick={onPlace}>
+        {place || 'Current Location'}
+      </button>
+      <button className="cc-temp cc-tap" onClick={onNow}>
         {formatTemp(current.temperature, settings.temperature)}
-      </div>
-      <div className="cc-cond">
+      </button>
+      <button className="cc-cond cc-tap" onClick={onNow}>
         <span className="cc-icon">{iconFor(current.weatherCode, current.isDay)}</span>
         {describe(current.weatherCode)}
-      </div>
+      </button>
       <div className="cc-hilo">
         {today && (
-          <>
+          <button className="cc-tap cc-hilo-btn" onClick={onToday}>
             <span>H:{formatTemp(today.tempMax, settings.temperature)}</span>
             <span>L:{formatTemp(today.tempMin, settings.temperature)}</span>
-          </>
+          </button>
         )}
-        <span className="cc-feels">
+        <button className="cc-feels cc-tap" onClick={onFeels}>
           Feels like {formatTemp(current.apparentTemperature, settings.temperature)}
-        </span>
+        </button>
       </div>
     </header>
   )

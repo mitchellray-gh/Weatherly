@@ -80,13 +80,17 @@ export default function App() {
           current={bundle.current}
           today={today}
           settings={settings}
+          onPlace={() => setDrill({ kind: 'place' })}
+          onNow={() => bundle.hourly[0] && setDrill({ kind: 'hour', time: bundle.hourly[0].time })}
+          onFeels={() => setDetail('feels')}
+          onToday={() => today && setDrill({ kind: 'day', date: today.date })}
         />
         <BestTimes
           hourly={bundle.hourly}
           settings={settings}
           onOpen={(activity) => setDrill({ kind: 'activity', activity })}
         />
-        <RadarMap location={bundle.location} />
+        <RadarMap location={bundle.location} onOpenDetail={() => setDrill({ kind: 'rain' })} />
         <HourlyStrip
           hourly={bundle.hourly}
           minutely={bundle.minutely}
@@ -108,6 +112,7 @@ export default function App() {
           airQuality={bundle.airQuality}
           settings={settings}
           onSelect={setDetail}
+          onSun={() => setDrill({ kind: 'sun' })}
         />
         {outlook ? (
           <YearOutlook
@@ -130,7 +135,7 @@ export default function App() {
     <>
       {!book && !geo && <Background weatherCode={code} isDay={isDay} />}
       {geo && <GeoBackground timezone={bundle?.location.timezone} />}
-      <AlertBanner alerts={alerts} />
+      <AlertBanner alerts={alerts} onSelect={(alert) => setDrill({ kind: 'alert', alert })} />
 
       {geo && bundle ? (
         // Immersive "journey through the data" — geometric, scene-by-scene.
@@ -164,6 +169,8 @@ export default function App() {
             onSelectDay={(date) => setDrill({ kind: 'day', date })}
             onSelectMetric={setDetail}
             onSelectActivity={(activity) => setDrill({ kind: 'activity', activity })}
+            onSelectSun={() => setDrill({ kind: 'sun' })}
+            onSelectPlace={() => setDrill({ kind: 'place' })}
           />
         </div>
       ) : (

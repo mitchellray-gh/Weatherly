@@ -5,6 +5,7 @@ import { cToUnit, formatTemp } from '../lib/units'
 interface Props {
   days: OutlookDay[]
   settings: Settings
+  onSelectDay?: (day: OutlookDay) => void
 }
 
 const W = 680
@@ -16,7 +17,7 @@ const PAD = { top: 18, right: 14, bottom: 24, left: 34 }
  * for the estimated portion, and a dashed style distinguishing estimates from
  * real forecast days.
  */
-export function OutlookChart({ days, settings }: Props) {
+export function OutlookChart({ days, settings, onSelectDay }: Props) {
   const model = useMemo(() => {
     const maxs = days.map((d) => cToUnit(d.tempMax, settings.temperature))
     const mins = days.map((d) => cToUnit(d.tempMin, settings.temperature))
@@ -148,6 +149,22 @@ export function OutlookChart({ days, settings }: Props) {
           {t.label}
         </text>
       ))}
+
+      {/* Invisible tap columns → open that day */}
+      {onSelectDay &&
+        n > 1 &&
+        days.map((d, i) => (
+          <rect
+            key={`tap-${d.date}`}
+            x={x(i) - innerW / (n - 1) / 2}
+            y={PAD.top}
+            width={innerW / (n - 1)}
+            height={innerH}
+            fill="transparent"
+            style={{ cursor: 'pointer' }}
+            onClick={() => onSelectDay(d)}
+          />
+        ))}
     </svg>
   )
 }

@@ -72,6 +72,14 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.96);
   padding: 0 4px;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.ticker-item:hover {
+  opacity: 0.78;
 }
 
 .ticker-item strong {

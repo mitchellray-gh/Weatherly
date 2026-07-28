@@ -1,4 +1,5 @@
 import type { DayPoint, HourPoint, OutlookDay, Settings, WeatherBundle } from '../types'
+import type { WeatherAlert } from '../lib/alerts'
 import {
   ACTIVITY_META,
   bestWindowsByDay,
@@ -16,6 +17,9 @@ export type Drill =
   | { kind: 'day'; date: string }
   | { kind: 'rain' }
   | { kind: 'outlook'; day: OutlookDay }
+  | { kind: 'sun' }
+  | { kind: 'place' }
+  | { kind: 'alert'; alert: WeatherAlert }
 
 interface Props {
   drill: Drill | null
@@ -345,8 +349,139 @@ function titleFor(drill: Drill): string {
         day: 'numeric',
         year: 'numeric',
       })
+    case 'sun':
+      return 'Sun & Daylight'
+    case 'place':
+      return 'Location'
+    case 'alert':
+      return 'Weather Alert'
   }
 }
+
+// --- Sun & daylight -----------------------------------------------------
+
+function fmtDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600)
+  const m = Math.round((seconds % 3600) / 60)
+  return `${h}h ${m}m`
+}
+
+function addMinutes(iso: string, mins: number): Date {
+  return new Date(new Date(iso).getTime() + mins * 60000)
+}
+
+function SunDetail({ bundle }: { bundle: WeatherBundle }) {
+  const today = bundle.daily[0]
+  const tomorrow = bundle.daily[1]
+  if (!today) return null
+  const rise = new Date(today.sunrise)
+  const set = new Date(today.sunset)
+  const solarNoon = new Date((rise.getTime() + set.getTime()) / 2)
+  // Golden hour ≈ first/last hour of light; blue/civil twilight ≈ ±30 min.
+  const dawn = addMinutes(today.sunrise, -30)
+  const dusk = addMinutes(today.sunset, 30)
+  const deltaSec = tomorrow ? tomorrow.daylightSeconds - today.daylightSeconds : 0
+  const deltaMin = Math.round(Math.abs(deltaSec) / 60)
+
+  return (
+    <div className="drill">
+      <div className="drill-hero">
+        <span className="drill-hero-icon">☀️</span>
+        <div>
+          <div className="drill-hero-value">{fmtDuration(today.daylightSeconds)}</div>
+          <div className="drill-hero-sub">of daylight today</div>
+        </div>
+      </div>
+      <div className="drill-grid">
+        <Stat label="Sunrise" value={timeLabel(today.sunrise)} />
+        <Stat label="Sunset" value={timeLabel(today.sunset)} />
+        <Stat label="Solar Noon" value={timeLabel(solarNoon.toISOString())} />
+        <Stat
+          label="Tomorrow"
+          value={deltaSec === 0 ? 'Same' : `${deltaSec > 0 ? '+' : '−'}${deltaMin} min`}
+        />
+        <Stat label="First Light" value={timeLabel(dawn.toISOString())} />
+        <Stat label="Last Light" value={timeLabel(dusk.toISOString())} />
+      </div>
+      <h3 className="drill-subtitle">Golden hour</h3>
+      <div className="drill-grid">
+        <Stat
+          label="Morning"
+          value={`${timeLabel(today.sunrise)}–${timeLabel(addMinutes(today.sunrise, 60).toISOString())}`}
+        />
+        <Stat
+          label="Evening"
+          value={`${timeLabel(addMinutes(today.sunset, -60).toISOString())}–${timeLabel(today.sunset)}`}
+        />
+      </div>
+      <p className="drill-lead">
+        {deltaSec === 0
+          ? 'Day length is holding steady.'
+          : `Days are getting ${deltaSec > 0 ? 'longer' : 'shorter'} by about ${deltaMin} minutes.`}{' '}
+        Times shown in {bundle.location.timezone.replace(/_/g, ' ')}.
+      </p>
+
+    </div>
+  )
+}
+
+// --- Location -----------------------------------------------------------
+
+function PlaceDetail({ bundle, settings }: { bundle: WeatherBundle; settings: Settings }) {
+  const loc = bundle.location
+  const c = bundle.current
+  const localTime = new Date().toLocaleTimeString('en-US', {
+    timeZone: loc.timezone && loc.timezone !== 'auto' ? loc.timezone : undefined,
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+  const place = [loc.name, loc.admin1, loc.country].filter(Boolean).join(', ')
+  return (
+    <div className="drill">
+      <div className="drill-hero">
+        <span className="drill-hero-icon">📍</span>
+        <div>
+          <div className="drill-hero-value" style={{ fontSize: 26 }}>
+            {loc.name}
+          </div>
+          <div className="drill-hero-sub">{[loc.admin1, loc.country].filter(Boolean).join(', ')}</div>
+        </div>
+      </div>
+      <div className="drill-grid">
+        <Stat label="Local Time" value={localTime} />
+        <Stat label="Now" value={`${formatTemp(c.temperature, settings.temperature)} · ${describe(c.weatherCode)}`} />
+        <Stat label="Latitude" value={`${loc.latitude.toFixed(3)}°`} />
+        <Stat label="Longitude" value={`${loc.longitude.toFixed(3)}°`} />
+        <Stat label="Timezone" value={loc.timezone.replace(/_/g, ' ')} />
+        <Stat label="Feels Like" value={formatTemp(c.apparentTemperature, settings.temperature)} />
+      </div>
+      <p className="drill-lead">{place}</p>
+    </div>
+  )
+}
+
+// --- Weather alert ------------------------------------------------------
+
+function AlertDetail({ alert }: { alert: WeatherAlert }) {
+  const levelLabel = alert.level === 'severe' ? 'Severe' : alert.level === 'warning' ? 'Warning' : 'Advisory'
+  return (
+    <div className="drill">
+      <div className="drill-hero">
+        <span className="drill-hero-icon">{alert.icon}</span>
+        <div>
+          <div className="drill-hero-value" style={{ fontSize: 24 }}>
+            {alert.title}
+          </div>
+          <div className={`drill-alert-level drill-alert-${alert.level}`}>{levelLabel}</div>
+        </div>
+      </div>
+      <p className="drill-lead">{alert.detail}</p>
+      <p className="drill-hint">Derived from the current forecast for your area.</p>
+    </div>
+  )
+}
+
+
 
 export function DrillSheet({ drill, bundle, settings, onClose, onOpen }: Props) {
   return (
@@ -360,6 +495,9 @@ export function DrillSheet({ drill, bundle, settings, onClose, onOpen }: Props) 
       )}
       {drill?.kind === 'rain' && <RainDetail bundle={bundle} settings={settings} onOpen={onOpen} />}
       {drill?.kind === 'outlook' && <OutlookDetail day={drill.day} settings={settings} />}
+      {drill?.kind === 'sun' && <SunDetail bundle={bundle} />}
+      {drill?.kind === 'place' && <PlaceDetail bundle={bundle} settings={settings} />}
+      {drill?.kind === 'alert' && <AlertDetail alert={drill.alert} />}
     </Sheet>
   )
 }

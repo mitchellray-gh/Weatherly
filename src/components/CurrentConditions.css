@@ -6,6 +6,27 @@
   align-items: center;
 }
 
+.cc-tap {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.cc-tap:hover {
+  opacity: 0.82;
+}
+.cc-tap:active {
+  transform: scale(0.97);
+}
+.cc-hilo-btn {
+  display: flex;
+  gap: 14px;
+  padding: 2px 8px;
+}
+
 .cc-place {
   font-size: 30px;
   font-weight: 500;

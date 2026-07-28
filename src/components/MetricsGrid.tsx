@@ -12,11 +12,12 @@ interface Props {
   airQuality: AirQuality | null
   settings: Settings
   onSelect: (target: DetailTarget) => void
+  onSun: () => void
 }
 
 const CARD_ORDER: MetricKey[] = ['feels', 'humidity', 'uv', 'pressure', 'visibility', 'cloud']
 
-export function MetricsGrid({ current, today, airQuality, settings, onSelect }: Props) {
+export function MetricsGrid({ current, today, airQuality, settings, onSelect, onSun }: Props) {
   const aqiVal = airQuality?.usAqi ?? airQuality?.europeanAqi ?? null
   const aqiCat = aqiVal != null ? aqiCategory(aqiVal) : null
 
@@ -72,10 +73,10 @@ export function MetricsGrid({ current, today, airQuality, settings, onSelect }: 
         })}
 
         {today && (
-          <div className="metric glass metric-wide">
+          <button className="metric glass metric-wide metric-btn" onClick={onSun} aria-label="Sun details">
             <div className="card-label">🌅 Sun</div>
             <SunArc sunrise={today.sunrise} sunset={today.sunset} />
-          </div>
+          </button>
         )}
       </div>
     </section>
