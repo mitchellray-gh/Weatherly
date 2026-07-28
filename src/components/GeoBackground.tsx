@@ -148,16 +148,35 @@ export function GeoBackground({ timezone }: Props) {
 
   // Floating geometric constellation — spinning low-poly wireframe shapes that
   // live at different parallax depths and rotate continuously, giving the flat
-  // scene a lively, generative, 2.5-D machine-drawn quality.
+  // scene a lively, generative, 2.5-D machine-drawn quality. Each shape has a
+  // little personality: some dashed, some with inner spokes or corner dots, and
+  // all drift on gentle bobbing float paths for a whimsical feel.
   const shapes = useMemo(
     () =>
       [
-        { sides: 3, x: 16, y: 24, size: 62, depth: 0.12, dur: 44, dir: 1 },
-        { sides: 6, x: 82, y: 30, size: 90, depth: 0.2, dur: 74, dir: -1 },
-        { sides: 4, x: 71, y: 15, size: 42, depth: 0.32, dur: 30, dir: 1 },
-        { sides: 5, x: 28, y: 46, size: 54, depth: 0.44, dur: 58, dir: -1 },
-        { sides: 8, x: 54, y: 22, size: 32, depth: 0.52, dur: 38, dir: 1 },
+        { sides: 3, x: 14, y: 22, size: 62, depth: 0.12, dur: 44, dir: 1, style: 'spokes', dash: false, float: 9 },
+        { sides: 6, x: 84, y: 28, size: 92, depth: 0.2, dur: 74, dir: -1, style: 'dots', dash: true, float: 7 },
+        { sides: 4, x: 73, y: 14, size: 40, depth: 0.32, dur: 30, dir: 1, style: 'plain', dash: false, float: 12 },
+        { sides: 5, x: 26, y: 44, size: 54, depth: 0.44, dur: 58, dir: -1, style: 'spokes', dash: false, float: 8 },
+        { sides: 8, x: 55, y: 20, size: 30, depth: 0.52, dur: 38, dir: 1, style: 'dots', dash: true, float: 11 },
+        { sides: 3, x: 60, y: 40, size: 24, depth: 0.6, dur: 26, dir: -1, style: 'plain', dash: true, float: 14 },
+        { sides: 7, x: 38, y: 12, size: 34, depth: 0.28, dur: 50, dir: 1, style: 'spokes', dash: false, float: 10 },
+        { sides: 4, x: 90, y: 48, size: 20, depth: 0.66, dur: 22, dir: -1, style: 'dots', dash: false, float: 15 },
       ] as const,
+    [],
+  )
+
+  // Whimsical geometric motes — tiny shapes that slowly orbit and twinkle.
+  const motes = useMemo(
+    () =>
+      Array.from({ length: 14 }, (_, i) => ({
+        x: (i * 47.3) % 100,
+        y: (i * 29.7) % 56,
+        s: 3 + ((i * 7) % 5),
+        dur: 16 + ((i * 5) % 12),
+        delay: (i % 6) * 1.1,
+        kind: i % 3, // 0 diamond, 1 triangle, 2 ring
+      })),
     [],
   )
 
@@ -167,6 +186,14 @@ export function GeoBackground({ timezone }: Props) {
       const a = (i / sides) * Math.PI * 2 - Math.PI / 2
       return `${(50 + r * Math.cos(a)).toFixed(1)},${(50 + r * Math.sin(a)).toFixed(1)}`
     }).join(' ')
+  }
+
+  // Vertices as [x,y] pairs for decorating corners with dots / spokes.
+  function verts(sides: number, r = 46): Array<[number, number]> {
+    return Array.from({ length: sides }, (_, i) => {
+      const a = (i / sides) * Math.PI * 2 - Math.PI / 2
+      return [50 + r * Math.cos(a), 50 + r * Math.sin(a)] as [number, number]
+    })
   }
 
   return (
@@ -182,7 +209,7 @@ export function GeoBackground({ timezone }: Props) {
         {shapes.map((s, i) => (
           <svg
             key={i}
-            className="geo-shape"
+            className={`geo-shape geo-shape--${s.style}`}
             viewBox="0 0 100 100"
             style={
               {
@@ -193,26 +220,84 @@ export function GeoBackground({ timezone }: Props) {
                 '--sd': s.depth,
                 '--spin': `${s.dur}s`,
                 '--dir': s.dir,
+                '--float': `${s.float}s`,
               } as React.CSSProperties
             }
           >
-            <polygon
-              points={poly(s.sides)}
-              fill="none"
-              stroke="rgba(255,255,255,0.32)"
-              strokeWidth="1"
-              vectorEffect="non-scaling-stroke"
-            />
-            <polygon
-              points={poly(s.sides, 24)}
-              fill="rgba(255,255,255,0.03)"
-              stroke="rgba(255,255,255,0.16)"
-              strokeWidth="0.6"
-              vectorEffect="non-scaling-stroke"
-            />
+            <g className="geo-shape-spin">
+              <polygon
+                points={poly(s.sides)}
+                fill="none"
+                stroke="rgba(255,255,255,0.34)"
+                strokeWidth="1"
+                strokeLinejoin="round"
+                strokeDasharray={s.dash ? '4 5' : undefined}
+                vectorEffect="non-scaling-stroke"
+              />
+              <polygon
+                points={poly(s.sides, 24)}
+                fill="rgba(255,255,255,0.03)"
+                stroke="rgba(255,255,255,0.16)"
+                strokeWidth="0.6"
+                vectorEffect="non-scaling-stroke"
+              />
+              {/* Inner spokes radiating from center to each vertex. */}
+              {s.style === 'spokes' &&
+                verts(s.sides).map(([vx, vy], k) => (
+                  <line
+                    key={k}
+                    x1="50"
+                    y1="50"
+                    x2={vx.toFixed(1)}
+                    y2={vy.toFixed(1)}
+                    stroke="rgba(255,255,255,0.14)"
+                    strokeWidth="0.6"
+                    vectorEffect="non-scaling-stroke"
+                  />
+                ))}
+              {/* Little dots pinned to each corner. */}
+              {s.style === 'dots' &&
+                verts(s.sides).map(([vx, vy], k) => (
+                  <circle key={k} cx={vx.toFixed(1)} cy={vy.toFixed(1)} r="1.6" fill="rgba(255,255,255,0.4)" />
+                ))}
+              {/* A tiny pulsing heart-dot at the very center. */}
+              <circle className="geo-shape-core" cx="50" cy="50" r="1.4" fill="rgba(255,246,220,0.7)" />
+            </g>
           </svg>
         ))}
       </div>
+
+      {/* Whimsical geometric motes drifting through the mid-air */}
+      <svg className="geo-motes" viewBox="0 0 100 60" preserveAspectRatio="none">
+        {motes.map((m, i) => (
+          <g
+            key={i}
+            className="geo-mote"
+            style={{ animationDuration: `${m.dur}s`, animationDelay: `${m.delay}s` }}
+            transform={`translate(${m.x} ${m.y})`}
+          >
+            {m.kind === 0 && (
+              <rect
+                x={-m.s * 0.05}
+                y={-m.s * 0.05}
+                width={m.s * 0.1}
+                height={m.s * 0.1}
+                fill="rgba(255,255,255,0.5)"
+                transform="rotate(45)"
+              />
+            )}
+            {m.kind === 1 && (
+              <polygon
+                points={`0,${(-m.s * 0.07).toFixed(2)} ${(m.s * 0.06).toFixed(2)},${(m.s * 0.05).toFixed(2)} ${(-m.s * 0.06).toFixed(2)},${(m.s * 0.05).toFixed(2)}`}
+                fill="rgba(255,246,220,0.55)"
+              />
+            )}
+            {m.kind === 2 && (
+              <circle r={m.s * 0.06} fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="0.4" />
+            )}
+          </g>
+        ))}
+      </svg>
 
 
       {/* Star field (night) */}
