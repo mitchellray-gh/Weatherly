@@ -20,6 +20,23 @@
   padding: 60px 26px 90px;
   gap: 14px;
   position: relative;
+  /* Entrance: content gently rises + settles as the scene enters view. */
+  opacity: 0;
+  transform: translateY(26px) scale(0.985);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.gj-scene.in-view {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .gj-scene {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 .gj-chapter {
@@ -174,7 +191,115 @@
   color: rgba(255, 255, 255, 0.62);
 }
 
-/* Scene 5 — AIR GAUGES */
+/* Scene 5 — MOMENTS (activity waypoints) */
+.gj-moments-lead {
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 300px;
+}
+.gj-trailwrap {
+  position: relative;
+  width: min(92vw, 400px);
+  height: 340px;
+}
+.gj-trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.gj-waypoint {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  cursor: pointer;
+  animation: gj-wp-pop 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes gj-wp-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -35%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+.gj-waypoint:active {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+.gj-wp-halo {
+  position: absolute;
+  top: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 170, 0.55), transparent 70%);
+  animation: gj-wp-pulse 3s ease-in-out infinite;
+}
+@keyframes gj-wp-pulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 1;
+  }
+}
+.gj-waypoint.alert .gj-wp-halo {
+  background: radial-gradient(circle, rgba(126, 200, 255, 0.6), transparent 70%);
+}
+.gj-wp-emoji {
+  position: relative;
+  font-size: 24px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+.gj-wp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  background: rgba(18, 22, 38, 0.5);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+.gj-wp-title {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+.gj-wp-when {
+  font-size: 10px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.62);
+}
+.gj-wp-tier {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+.gj-wp-tier[data-tier='Beautiful'] {
+  color: #b6f0c4;
+}
+.gj-wp-tier[data-tier='Great'] {
+  color: #cfe9ff;
+}
+
+/* Scene 6 — AIR GAUGES */
 .gj-gauges {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

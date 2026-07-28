@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { localDayFraction, sampleScene } from '../lib/geoScene'
+import { localDayFraction, sampleLight, sampleScene } from '../lib/geoScene'
 import './GeoBackground.css'
 
 interface Props {
@@ -9,15 +9,13 @@ interface Props {
 /**
  * Atmospheric Vector Engine — a layered parallax "playable postcard" in the
  * spirit of Alto's Odyssey. Flat low-poly silhouettes stack over a live
- * 24-hour sky gradient; as you travel through the journey the planes slide at
- * stepped speeds (foreground fastest, horizon slowest, skybox static) to give
- * a 2.5-D sense of gliding across a landscape.
+ * 24-hour sky gradient with a moving sun/moon that lights the structures and
+ * casts long shadows. Parallax planes slide at stepped speeds as you travel.
  */
 export function GeoBackground({ timezone }: Props) {
   const [tod, setTod] = useState(() => localDayFraction(timezone))
   const rootRef = useRef<HTMLDivElement>(null)
 
-  // Re-sample the clock every 30 s so the lighting cycle stays live.
   useEffect(() => {
     setTod(localDayFraction(timezone))
     const id = window.setInterval(() => setTod(localDayFraction(timezone)), 30_000)
@@ -25,15 +23,14 @@ export function GeoBackground({ timezone }: Props) {
   }, [timezone])
 
   const scene = useMemo(() => sampleScene(tod), [tod])
+  const light = useMemo(() => sampleLight(tod), [tod])
 
-  // Parallax driven by the journey's own scroll container (falls back to
-  // window scroll for the classic layouts). GlobalX advances as you travel.
+  // Parallax driven by the journey's own scroll container.
   useEffect(() => {
     let raf = 0
     let scroller: HTMLElement | Window = window
     const readY = () =>
       scroller === window ? window.scrollY : (scroller as HTMLElement).scrollTop
-
     const apply = () => {
       raf = 0
       const el = rootRef.current
@@ -45,7 +42,6 @@ export function GeoBackground({ timezone }: Props) {
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(apply)
     }
-
     const bind = () => {
       const gj = document.querySelector('.gj') as HTMLElement | null
       scroller = gj ?? window
@@ -54,7 +50,6 @@ export function GeoBackground({ timezone }: Props) {
     }
     bind()
     const retry = window.setTimeout(bind, 60)
-
     return () => {
       window.clearTimeout(retry)
       scroller.removeEventListener('scroll', onScroll)
@@ -62,11 +57,13 @@ export function GeoBackground({ timezone }: Props) {
     }
   }, [])
 
-  // Sun / moon orb along a smooth arc.
-  const angle = (tod - 0.5) * Math.PI * 2
-  const orbX = 50 + Math.sin(angle) * 40
-  const orbY = 44 - Math.cos(angle) * 38
+  const orbX = light.x
+  const orbY = light.y
   const dayness = 1 - scene.stars
+
+  // Directional shadow skew for foreground objects.
+  const shDir = light.x < 50 ? 1 : -1
+  const shSkew = shDir * (8 + (1 - light.elevation) * 26)
 
   const styleVars = {
     '--sky-top': scene.skyTop,
@@ -80,11 +77,19 @@ export function GeoBackground({ timezone }: Props) {
     '--orb-glow': scene.orbGlow,
     '--stars': scene.stars,
     '--geo-ink': scene.ink,
+    '--geo-key': light.key,
+    '--geo-intensity': light.intensity,
+    '--geo-lightx': `${light.x}%`,
+    '--geo-lighty': `${light.y}%`,
+    '--geo-rim': 0.1 + light.elevation * 0.4,
+    '--geo-shadow': (0.12 + (1 - light.elevation) * 0.22).toFixed(3),
+    '--geo-shskew': `${shSkew}deg`,
+    '--geo-shscale': (0.5 + (1 - light.elevation) * 1.4).toFixed(2),
   } as React.CSSProperties
 
   const stars = useMemo(
     () =>
-      Array.from({ length: 70 }, (_, i) => ({
+      Array.from({ length: 80 }, (_, i) => ({
         x: (i * 61.8) % 100,
         y: (i * 37.3) % 52,
         r: 0.5 + ((i * 13) % 10) / 10,
@@ -93,24 +98,32 @@ export function GeoBackground({ timezone }: Props) {
     [],
   )
 
+  // Night lanterns rising slowly.
+  const lanterns = useMemo(
+    () => [
+      { x: 22, delay: 0, dur: 26 },
+      { x: 44, delay: 6, dur: 32 },
+      { x: 63, delay: 12, dur: 29 },
+      { x: 80, delay: 3, dur: 34 },
+    ],
+    [],
+  )
+
   return (
     <div ref={rootRef} className="geo" aria-hidden style={styleVars}>
       {/* Layer 4 — static skybox gradient */}
       <div className="geo-sky" />
 
+      {/* Sunlight / moonlight wash centered on the orb */}
+      <div className="geo-lightwash" />
+
       {/* Star field (night) */}
       <svg className="geo-stars" viewBox="0 0 100 60" preserveAspectRatio="none">
         {stars.map((s, i) => (
-          <circle
-            key={i}
-            cx={s.x}
-            cy={s.y}
-            r={s.r * 0.12}
-            fill="#ffffff"
-            style={{ animationDelay: `${s.d}s` }}
-          />
+          <circle key={i} cx={s.x} cy={s.y} r={s.r * 0.12} fill="#ffffff" style={{ animationDelay: `${s.d}s` }} />
         ))}
         <line className="geo-shoot" x1="8" y1="10" x2="20" y2="16" stroke="#fff" strokeWidth="0.3" />
+        <line className="geo-comet" x1="70" y1="8" x2="86" y2="2" stroke="#cfe0ff" strokeWidth="0.4" />
       </svg>
 
       {/* Sun / moon orb */}
@@ -120,11 +133,14 @@ export function GeoBackground({ timezone }: Props) {
           left: `${orbX}%`,
           top: `${orbY}%`,
           background: scene.orb,
-          boxShadow: `0 0 70px 26px ${scene.orbGlow}, 0 0 20px 6px ${scene.orbGlow}`,
+          boxShadow: `0 0 80px 30px ${scene.orbGlow}, 0 0 24px 8px ${scene.orbGlow}`,
         }}
-      />
+      >
+        {/* faint sun rays at high elevation */}
+        {light.elevation > 0.35 && <span className="geo-rays" />}
+      </div>
 
-      {/* Drifting clouds + a lazy hot-air balloon (day) */}
+      {/* Clouds, balloon, and bird flock (day) */}
       <div className="geo-clouds" style={{ opacity: dayness }}>
         <svg className="geo-cloud geo-cloud-a" viewBox="0 0 120 40">
           <path d="M10 30 Q18 14 34 18 Q40 6 58 14 Q76 8 82 22 Q104 20 104 30 Z" fill="rgba(255,255,255,0.9)" />
@@ -132,21 +148,36 @@ export function GeoBackground({ timezone }: Props) {
         <svg className="geo-cloud geo-cloud-b" viewBox="0 0 120 40">
           <path d="M8 30 Q20 16 36 22 Q46 10 64 18 Q84 12 92 26 Q108 24 108 30 Z" fill="rgba(255,255,255,0.72)" />
         </svg>
+        <svg className="geo-cloud geo-cloud-c" viewBox="0 0 120 40">
+          <path d="M6 30 Q16 20 30 24 Q40 14 56 22 Q72 16 80 26 Q98 24 100 30 Z" fill="rgba(255,255,255,0.55)" />
+        </svg>
         <svg className="geo-balloon" viewBox="0 0 20 30">
           <path d="M10 1 C3 1 2 9 6 15 L14 15 C18 9 17 1 10 1 Z" fill="rgba(255,255,255,0.85)" />
+          <path d="M10 1 C7 1 6.5 9 8 15 L12 15 C13.5 9 13 1 10 1 Z" fill="rgba(255,200,140,0.6)" />
           <path d="M6 15 L10 20 L14 15 Z" fill="rgba(255,255,255,0.6)" />
           <rect x="8.4" y="20" width="3.2" height="2.4" rx="0.5" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
 
-      {/* Birds drifting across the middle distance (day) */}
       <svg className="geo-birds" viewBox="0 0 100 20" style={{ opacity: dayness * 0.8 }}>
         <g fill="none" stroke="var(--l2)" strokeWidth="0.5" strokeLinecap="round">
           <path d="M0 6 Q1.4 4.4 2.8 6 Q4.2 4.4 5.6 6" />
           <path d="M8 9 Q9.2 7.7 10.4 9 Q11.6 7.7 12.8 9" />
           <path d="M4 11 Q5 10 6 11 Q7 10 8 11" />
+          <path d="M14 7 Q15 6 16 7 Q17 6 18 7" />
         </g>
       </svg>
+
+      {/* Floating lanterns (night) */}
+      <div className="geo-lanterns" style={{ opacity: scene.stars }}>
+        {lanterns.map((l, i) => (
+          <span
+            key={i}
+            className="geo-lantern"
+            style={{ left: `${l.x}%`, animationDelay: `${l.delay}s`, animationDuration: `${l.dur}s` }}
+          />
+        ))}
+      </div>
 
       {/* Layer 3 — far mountain range (slowest) */}
       <svg className="geo-layer geo-l3" viewBox="0 0 100 40" preserveAspectRatio="none">
@@ -154,37 +185,80 @@ export function GeoBackground({ timezone }: Props) {
           d="M0 40 L0 26 L10 18 L18 24 L28 12 L38 22 L50 14 L60 24 L72 16 L82 24 L92 18 L100 24 L100 40 Z"
           fill="var(--l3)"
         />
+        {/* snow-lit peaks */}
+        <path d="M28 12 L31 16 L25 16 Z M72 16 L75 20 L69 20 Z" fill="rgba(255,255,255,var(--geo-rim))" />
       </svg>
 
-      {/* Layer 2 — distant mountains + a mesa */}
+      {/* Layer 2 — distant mountains, mesa, and a little town */}
       <svg className="geo-layer geo-l2" viewBox="0 0 100 46" preserveAspectRatio="none">
         <path
           d="M0 46 L0 30 L12 12 L22 26 L34 8 L46 26 L58 14 L64 26 L72 20 L72 16 L86 16 L86 22 L100 14 L100 46 Z"
           fill="var(--l2)"
         />
+        <g fill="var(--l2)">
+          {/* distant town rectangles */}
+          <rect x="8" y="34" width="2" height="5" />
+          <rect x="11" y="32" width="2.4" height="7" />
+          <rect x="14.5" y="35" width="1.8" height="4" />
+          <polygon points="10.5,32 12.2,29.5 13.9,32" />
+        </g>
+        {/* sun-lit ridge highlight */}
+        <path d="M34 8 L37 12 L31 12 Z M58 14 L61 18 L55 18 Z" fill="rgba(255,240,210,var(--geo-rim))" />
       </svg>
 
-      {/* Layer 1 — rolling hills, pines, and a temple silhouette */}
+      {/* Layer 1 — hills, pines, a temple, and a river that mirrors the sky */}
       <svg className="geo-layer geo-l1" viewBox="0 0 100 44" preserveAspectRatio="none">
         <path d="M0 44 L0 26 Q22 12 44 22 Q64 31 82 20 Q92 15 100 22 L100 44 Z" fill="var(--l1)" />
+        {/* winding river reflecting sky-bottom */}
+        <path d="M0 40 Q20 34 34 38 Q50 43 66 37 Q82 32 100 38 L100 44 L0 44 Z" fill="var(--sky-bottom)" opacity="0.32" />
         <g fill="var(--l1)">
           <polygon points="16,26 20,14 24,26" />
           <polygon points="17,22 20,17 23,22" />
           <polygon points="64,26 67,16 70,26" />
           <polygon points="88,26 91,18 94,26" />
+          {/* pagoda / temple */}
           <polygon points="46,24 50,17 54,24" />
           <rect x="47.5" y="22" width="5" height="4" />
           <polygon points="45,22 50,18 55,22" />
         </g>
+        {/* pine tips catch the light */}
+        <g fill="rgba(255,240,210,var(--geo-rim))">
+          <polygon points="20,14 21.4,16 18.6,16" />
+          <polygon points="67,16 68.4,18 65.6,18" />
+        </g>
       </svg>
 
-      {/* Layer 0 — foreground dune with a lone traveler (fastest) */}
+      {/* Layer 0 — foreground dune, rocks, cactus, tent, traveler + shadows */}
       <svg className="geo-layer geo-l0" viewBox="0 0 100 34" preserveAspectRatio="none">
-        <path d="M0 34 L0 20 Q30 6 62 16 Q82 22 100 14 L100 34 Z" fill="var(--l0)" />
-        <g fill="var(--l0)" className="geo-traveler">
-          <circle cx="52" cy="13.2" r="0.9" />
-          <rect x="51.4" y="13.8" width="1.2" height="3" rx="0.5" />
+        {/* cast shadows (drawn first, skewed away from the sun) */}
+        <g className="geo-shadows" fill="#000" opacity="var(--geo-shadow)">
+          <ellipse cx="52" cy="15.5" rx="3" ry="0.7" />
+          <ellipse cx="24" cy="18" rx="3.4" ry="0.8" />
+          <ellipse cx="78" cy="16.5" rx="2.6" ry="0.7" />
         </g>
+        <path d="M0 34 L0 20 Q30 6 62 16 Q82 22 100 14 L100 34 Z" fill="var(--l0)" />
+        {/* wind ripples on the dune */}
+        <g stroke="rgba(255,255,255,0.14)" strokeWidth="0.2" fill="none">
+          <path d="M6 24 Q20 20 34 23" />
+          <path d="M40 22 Q56 18 72 21" />
+        </g>
+        <g fill="var(--l0)">
+          {/* rocks */}
+          <polygon points="22,18 26,14 29,18" />
+          <polygon points="76,17 79,13 82,17" />
+          {/* cactus */}
+          <rect x="66" y="12" width="1.1" height="5" rx="0.5" />
+          <rect x="65.2" y="13.5" width="1.6" height="0.9" rx="0.4" />
+          {/* tent */}
+          <polygon points="9,18 12,12 15,18" />
+          {/* lone traveler */}
+          <g className="geo-traveler">
+            <circle cx="52" cy="12.4" r="0.9" />
+            <rect x="51.4" y="13" width="1.2" height="3" rx="0.5" />
+          </g>
+        </g>
+        {/* dune crest highlight facing the sun */}
+        <path d="M0 20 Q30 6 62 16" fill="none" stroke="rgba(255,240,210,var(--geo-rim))" strokeWidth="0.4" />
       </svg>
     </div>
   )

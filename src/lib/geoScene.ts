@@ -172,3 +172,38 @@ export function localDayFraction(timezone?: string, date = new Date()): number {
     return (date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()) / 86400
   }
 }
+
+// ------------------------------------------------------------------ //
+// Lighting model — where the sun/moon is and how it lights the land.  //
+// ------------------------------------------------------------------ //
+
+export interface SceneLight {
+  /** Orb centre as viewport %, 0..100. */
+  x: number
+  y: number
+  /** 0 below horizon (moon) → 1 high sun. Drives shadow length + rim strength. */
+  elevation: number
+  /** Warm key-light color (sun) and its intensity 0..1. */
+  key: string
+  intensity: number
+  /** Direction shadows lean, in degrees (0 = right, 180 = left). */
+  shadowAngle: number
+  /** Length multiplier for cast shadows (longer when sun is low). */
+  shadowLen: number
+}
+
+/** Sun/moon position + directional lighting for a given time of day. */
+export function sampleLight(timeOfDay: number): SceneLight {
+  const t = ((timeOfDay % 1) + 1) % 1
+  const ang = (t - 0.5) * Math.PI * 2
+  const x = 50 + Math.sin(ang) * 42
+  const yRaw = 44 - Math.cos(ang) * 46
+  const elevation = Math.max(0, Math.cos(ang))
+  const daytime = t > 0.22 && t < 0.8
+  const golden = Math.max(0, 1 - Math.abs(elevation - 0.25) * 3)
+  const key = daytime ? (golden > 0.4 ? '#ffca6e' : '#fff4d6') : '#9fb4ff'
+  const intensity = daytime ? 0.35 + elevation * 0.55 : 0.14
+  const shadowAngle = x < 50 ? 30 : 150
+  const shadowLen = 1 + (1 - elevation) * 1.6
+  return { x, y: Math.max(4, yRaw), elevation, key, intensity, shadowAngle, shadowLen }
+}

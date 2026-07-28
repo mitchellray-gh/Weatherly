@@ -3,6 +3,7 @@ import type { DayPoint, Settings, WeatherBundle } from '../types'
 import type { MetricKey } from '../lib/metricDefs'
 import { cToUnit, degToCompass, formatTemp, formatWind } from '../lib/units'
 import { describe } from '../lib/weatherCodes'
+import { activitySuggestions, scoreLabel } from '../lib/activity'
 import './GeoJourney.css'
 
 interface Props {
@@ -11,25 +12,37 @@ interface Props {
   onSelectHour: (time: string) => void
   onSelectDay: (date: string) => void
   onSelectMetric: (m: MetricKey) => void
+  onSelectActivity: (id: string) => void
 }
 
-const CHAPTERS = ['Now', "Today's Arc", 'The Hours Ahead', 'The Days Ahead', 'The Air'] as const
+const CHAPTERS = ['Now', "Today's Arc", 'The Hours', 'The Days', 'Moments', 'The Air'] as const
 
-export function GeoJourney({ bundle, settings, onSelectHour, onSelectDay, onSelectMetric }: Props) {
+export function GeoJourney({
+  bundle,
+  settings,
+  onSelectHour,
+  onSelectDay,
+  onSelectMetric,
+  onSelectActivity,
+}: Props) {
   const [active, setActive] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
 
-  // Track which scene is centered to drive the progress rail.
+  // Track which scene is centered (rail) + reveal scenes as they enter view.
   useEffect(() => {
     const scenes = rootRef.current?.querySelectorAll('.gj-scene')
     if (!scenes) return
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
-          if (e.isIntersecting) setActive(Number((e.target as HTMLElement).dataset.i))
+          if (e.isIntersecting) {
+            e.target.classList.add('in-view')
+            const i = Number((e.target as HTMLElement).dataset.i)
+            if (e.intersectionRatio > 0.5) setActive(i)
+          }
         }
       },
-      { threshold: 0.55 },
+      { threshold: [0.2, 0.55] },
     )
     scenes.forEach((s) => io.observe(s))
     return () => io.disconnect()
@@ -45,6 +58,7 @@ export function GeoJourney({ bundle, settings, onSelectHour, onSelectDay, onSele
       <ArcScene bundle={bundle} settings={settings} />
       <HoursScene bundle={bundle} settings={settings} onSelectHour={onSelectHour} />
       <DaysScene bundle={bundle} settings={settings} onSelectDay={onSelectDay} />
+      <MomentsScene bundle={bundle} settings={settings} onSelectActivity={onSelectActivity} />
       <AirScene bundle={bundle} settings={settings} onSelectMetric={onSelectMetric} />
 
       {/* Journey progress rail */}
@@ -328,7 +342,79 @@ function DaysScene({
   )
 }
 
-// --- Scene 5: THE AIR (radial geometric gauges) ------------------------
+// --- Scene 5: MOMENTS (activity waypoints along a trail) ---------------
+
+function MomentsScene({
+  bundle,
+  settings,
+  onSelectActivity,
+}: {
+  bundle: WeatherBundle
+  settings: Settings
+  onSelectActivity: (id: string) => void
+}) {
+  const suggestions = useMemo(
+    () => activitySuggestions(bundle.hourly, settings.activities).slice(0, 6),
+    [bundle.hourly, settings.activities],
+  )
+  if (suggestions.length === 0) return null
+
+  function whenShort(time: Date): string {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    const dd = Math.round((new Date(time).setHours(0, 0, 0, 0) - startOfToday.getTime()) / 86400000)
+    const hr = time.toLocaleTimeString([], { hour: 'numeric' })
+    if (dd === 0) return `Today ${hr}`
+    if (dd === 1) return `Tomorrow ${hr}`
+    return `${time.toLocaleDateString([], { weekday: 'short' })} ${hr}`
+  }
+
+  // Lay the waypoints along a gentle vector trail across the scene.
+  const n = suggestions.length
+  const pts = suggestions.map((_, i) => {
+    const fx = n === 1 ? 0.5 : i / (n - 1)
+    const x = 10 + fx * 80
+    const y = 60 + Math.sin(fx * Math.PI * 1.4) * -26
+    return { x, y }
+  })
+  const trail = pts
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`)
+    .join(' ')
+
+  return (
+    <section className="gj-scene gj-moments" data-i={4}>
+      <div className="gj-chapter">Moments</div>
+      <p className="gj-moments-lead">Good times to be outside, marked along the way</p>
+
+      <div className="gj-trailwrap">
+        <svg className="gj-trail" viewBox="0 0 100 90" preserveAspectRatio="none">
+          <path d={trail} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="0.5" strokeDasharray="1.4 2.2" strokeLinecap="round" />
+        </svg>
+        {suggestions.map((s, i) => (
+          <button
+            key={s.def.id}
+            className={`gj-waypoint ${s.def.conditional ? 'alert' : ''}`}
+            style={{ left: `${pts[i].x}%`, top: `${pts[i].y}%`, animationDelay: `${i * 0.12}s` }}
+            onClick={() => onSelectActivity(s.def.id)}
+          >
+            <span className="gj-wp-halo" />
+            <span className="gj-wp-emoji">{s.def.emoji}</span>
+            <span className="gj-wp-card">
+              <span className="gj-wp-title">{s.def.title}</span>
+              <span className="gj-wp-when">{whenShort(s.window.time)}</span>
+              <span className="gj-wp-tier" data-tier={scoreLabel(s.window.score)}>
+                {s.def.conditional ? 'Best window' : scoreLabel(s.window.score)}
+              </span>
+            </span>
+          </button>
+        ))}
+      </div>
+      <div className="gj-hint">Tap a landmark to plan it</div>
+    </section>
+  )
+}
+
+// --- Scene 6: THE AIR (radial geometric gauges) ------------------------
 
 function Gauge({
   value,
@@ -387,7 +473,7 @@ function AirScene({
   const ny = 45 + 26 * Math.sin(rad)
 
   return (
-    <section className="gj-scene gj-air" data-i={4}>
+    <section className="gj-scene gj-air" data-i={5}>
       <div className="gj-chapter">The Air</div>
       <div className="gj-gauges">
         <button className="gj-gauge" onClick={() => onSelectMetric('wind')}>

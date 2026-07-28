@@ -163,6 +163,7 @@ export default function App() {
             onSelectHour={(time) => setDrill({ kind: 'hour', time })}
             onSelectDay={(date) => setDrill({ kind: 'day', date })}
             onSelectMetric={setDetail}
+            onSelectActivity={(activity) => setDrill({ kind: 'activity', activity })}
           />
         </div>
       ) : (

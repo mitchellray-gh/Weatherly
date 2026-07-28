@@ -4,6 +4,8 @@
   z-index: -2;
   overflow: hidden;
   --geo-x: 0;
+  --geo-rim: 0.3;
+  --geo-shadow: 0.2;
   pointer-events: none;
   transition: background 1.5s linear;
 }
@@ -19,6 +21,21 @@
     var(--sky-bottom) 100%
   );
   transition: background 1.5s linear;
+}
+
+/* Sunlight / moonlight wash — a soft radial glow centered on the orb that
+   lights the scene and warms toward gold at low sun. */
+.geo-lightwash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--geo-lightx) var(--geo-lighty),
+    var(--geo-key) 0%,
+    transparent 46%
+  );
+  opacity: calc(var(--geo-intensity) * 0.5);
+  mix-blend-mode: screen;
+  transition: opacity 1.5s linear, background 1.5s linear;
 }
 
 /* Star field */
@@ -55,6 +72,42 @@
     background 1.5s linear,
     box-shadow 1.5s linear;
 }
+.geo-rays {
+  position: absolute;
+  inset: -60%;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 244, 214, 0.28) 0deg,
+    transparent 12deg,
+    transparent 30deg,
+    rgba(255, 244, 214, 0.28) 42deg,
+    transparent 54deg,
+    transparent 78deg,
+    rgba(255, 244, 214, 0.28) 90deg,
+    transparent 102deg,
+    transparent 138deg,
+    rgba(255, 244, 214, 0.28) 150deg,
+    transparent 162deg,
+    transparent 210deg,
+    rgba(255, 244, 214, 0.28) 222deg,
+    transparent 234deg,
+    transparent 282deg,
+    rgba(255, 244, 214, 0.28) 294deg,
+    transparent 306deg,
+    transparent 348deg,
+    rgba(255, 244, 214, 0.28) 360deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 30%, #000 70%);
+  mask-image: radial-gradient(circle, transparent 30%, #000 70%);
+  opacity: 0.5;
+  animation: geo-rays-spin 90s linear infinite;
+}
+@keyframes geo-rays-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 /* Drifting clouds */
 .geo-clouds {
@@ -77,6 +130,13 @@
   width: 26%;
   animation: geo-drift-b 130s linear infinite;
 }
+.geo-cloud-c {
+  top: 22%;
+  height: 5%;
+  width: 22%;
+  opacity: 0.8;
+  animation: geo-drift-a 160s linear infinite;
+}
 @keyframes geo-drift-a {
   from {
     transform: translateX(-40%);
@@ -93,6 +153,63 @@
     transform: translateX(420%);
   }
 }
+
+/* Comet streak (night, occasional). */
+.geo-comet {
+  opacity: 0;
+  animation: geo-comet 26s ease-in infinite;
+}
+@keyframes geo-comet {
+  0%,
+  70% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  74% {
+    opacity: 0.85;
+  }
+  84% {
+    opacity: 0;
+    transform: translate(-30px, 20px);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Floating lanterns (night). */
+.geo-lanterns {
+  position: absolute;
+  inset: 0;
+  transition: opacity 1.5s linear;
+}
+.geo-lantern {
+  position: absolute;
+  bottom: 24%;
+  width: 6px;
+  height: 9px;
+  border-radius: 40% 40% 50% 50%;
+  background: radial-gradient(circle at 50% 40%, #ffd98a, #ff9d4d);
+  box-shadow: 0 0 10px 3px rgba(255, 180, 90, 0.6);
+  animation: geo-lantern-rise linear infinite;
+}
+@keyframes geo-lantern-rise {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.95;
+  }
+  88% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-70vh) translateX(20px);
+    opacity: 0;
+  }
+}
+
 /* Silhouette planes */
 .geo-layer {
   position: absolute;
@@ -110,6 +227,13 @@
 .geo-layer rect,
 .geo-layer circle {
   transition: fill 1.5s linear;
+}
+
+/* Foreground cast shadows skew away from the sun and lengthen at low light. */
+.geo-shadows {
+  transform: skewX(var(--geo-shskew)) scaleY(var(--geo-shscale));
+  transform-origin: bottom;
+  transition: transform 1.5s linear;
 }
 
 /*
@@ -196,9 +320,13 @@
 @media (prefers-reduced-motion: reduce) {
   .geo-cloud-a,
   .geo-cloud-b,
+  .geo-cloud-c,
   .geo-balloon,
   .geo-birds,
   .geo-shoot,
+  .geo-comet,
+  .geo-lantern,
+  .geo-rays,
   .geo-stars circle {
     animation: none;
   }
