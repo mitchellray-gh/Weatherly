@@ -55,12 +55,20 @@
   display: inline-block;
 }
 
-.dot-forecast {
+.dot-high {
   background: #ff9d5c;
 }
 
+.dot-low {
+  background: #64b5ff;
+}
+
+.dot-solid {
+  background: var(--text-dim);
+}
+
 .dot-estimate {
-  background: repeating-linear-gradient(90deg, #ff9d5c 0 4px, transparent 4px 8px);
+  background: repeating-linear-gradient(90deg, var(--text-dim) 0 4px, transparent 4px 8px);
 }
 
 .year-months {

@@ -247,6 +247,66 @@ function rainPeriods(hourly: HourPoint[], now: number): RainPeriod[] {
   return periods
 }
 
+/**
+ * A continuous ~24-hour precipitation timeline. Unlike the period list, this
+ * shows every hour — wet and dry — so users can read the rain in context of the
+ * dry stretches around it, with real clock times along the x-axis.
+ */
+function PrecipTimeline({
+  bundle,
+  settings,
+  onOpen,
+}: {
+  bundle: WeatherBundle
+  settings: Settings
+  onOpen: (d: Drill) => void
+}) {
+  const now = Date.now()
+  const hours = bundle.hourly.filter((h) => new Date(h.time).getTime() >= now - 3600_000).slice(0, 24)
+  if (hours.length === 0) return null
+  const maxAmt = Math.max(0.5, ...hours.map((h) => h.precipitation))
+
+  return (
+    <div className="precip-tl">
+      <div className="precip-tl-track">
+        {hours.map((h) => {
+          const prob = h.precipitationProbability ?? 0
+          const wet = h.precipitation >= 0.1 || prob >= 40
+          const amtFrac = Math.min(1, h.precipitation / maxAmt)
+          // Wet hours scale with amount so a run of rain reads as a continuous
+          // ridge; dry hours show a faint probability sliver.
+          const heightPct = wet ? Math.max(14, amtFrac * 100) : Math.max(4, prob * 0.2)
+          const d = new Date(h.time)
+          const label = d.toLocaleTimeString([], { hour: 'numeric' }).replace(' ', '')
+          const showTick = d.getHours() % 3 === 0
+          return (
+            <button
+              key={h.time}
+              className={`precip-tl-col ${wet ? 'wet' : 'dry'}`}
+              onClick={() => onOpen({ kind: 'hour', time: h.time })}
+              title={`${label} · ${Math.round(prob)}% · ${formatPrecip(h.precipitation, settings.precip)}`}
+            >
+              <span className="precip-tl-bar-wrap">
+                <span className="precip-tl-bar" style={{ height: `${heightPct}%` }} />
+              </span>
+              <span className="precip-tl-tick">{showTick ? label : ''}</span>
+            </button>
+          )
+        })}
+      </div>
+      <div className="precip-tl-legend">
+        <span>
+          <span className="precip-tl-key wet" /> Rain
+        </span>
+        <span>
+          <span className="precip-tl-key dry" /> Dry
+        </span>
+        <span className="precip-tl-span">Next {hours.length} hrs</span>
+      </div>
+    </div>
+  )
+}
+
 function RainDetail({
   bundle,
   settings,
@@ -260,6 +320,7 @@ function RainDetail({
   return (
     <div className="drill">
       <p className="drill-lead">Upcoming precipitation periods over the next 16 days.</p>
+      <PrecipTimeline bundle={bundle} settings={settings} onOpen={onOpen} />
       <div className="drill-list">
         {periods.map((p) => {
           const sameHour = p.start.time === p.end.time

@@ -75,7 +75,13 @@ export function YearOutlook({ outlook, settings, onWindowChange, onSelectDay }: 
         </h2>
         <div className="year-legend">
           <span className="year-legend-item">
-            <span className="dot dot-forecast" /> Forecast
+            <span className="dot dot-high" /> High
+          </span>
+          <span className="year-legend-item">
+            <span className="dot dot-low" /> Low
+          </span>
+          <span className="year-legend-item">
+            <span className="dot dot-solid" /> Forecast
           </span>
           <span className="year-legend-item">
             <span className="dot dot-estimate" /> Climate estimate
