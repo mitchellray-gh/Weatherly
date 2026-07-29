@@ -228,6 +228,9 @@ export function GeoBackground({ timezone, weatherCode }: Props) {
       {/* Sunlight / moonlight wash centered on the orb */}
       <div className="geo-lightwash" />
 
+      {/* Legibility scrim — a soft darkening so journey content stays readable */}
+      <div className="geo-scrim" />
+
       {/* Spinning geometric constellation — low-poly wireframes at varied depths */}
       <div className="geo-shapes">
         {/* Constellation connector lines linking nearby shapes into a figure. */}

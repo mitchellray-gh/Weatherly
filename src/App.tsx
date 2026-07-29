@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Background } from './components/Background'
 import { GeoBackground } from './components/GeoBackground'
-import { GeoConfetti } from './components/GeoConfetti'
 import { GeoJourney } from './components/GeoJourney'
 import { SearchBar } from './components/SearchBar'
 import { SavedLocations } from './components/SavedLocations'
@@ -142,7 +141,6 @@ export default function App() {
     <>
       {!book && !geo && <Background weatherCode={code} isDay={isDay} />}
       {geo && <GeoBackground timezone={bundle?.location.timezone} weatherCode={code} />}
-      {geo && <GeoConfetti />}
       <AlertBanner alerts={alerts} onSelect={(alert) => setDrill({ kind: 'alert', alert })} />
 
       {geo && bundle ? (

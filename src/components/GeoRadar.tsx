@@ -218,6 +218,7 @@ export function GeoRadar({ location, active }: Props) {
       }
       ctx.clearRect(0, 0, W, H)
 
+      const t0 = performance.now() / 1000
       const { yaw, tilt, zoom, panX, panY } = cam.current
       const fi = frameRef.current
       const cx = W / 2
@@ -256,10 +257,23 @@ export function GeoRadar({ location, active }: Props) {
         return Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV)) * (elevH / spread) * 3.2
       }
 
+      // Always-present rolling "topography" so the map reads as 3-D terrain even
+      // when it's completely dry — gentle layered sine hills drifting over time.
+      const unit = elevH / spread
+      const drift = t0 * 0.06
+      const baseH = (c: number, r: number) => {
+        const u = c / (n - 1)
+        const w = r / (n - 1)
+        const a = Math.sin(u * 6.2 + drift) * Math.cos(w * 5.1 - drift * 0.7)
+        const b = Math.sin((u + w) * 4.3 + drift * 1.3)
+        return (a * 0.5 + b * 0.5) * unit * 0.55 + unit * 0.35
+      }
+      const surfH = (c: number, r: number) => baseH(c, r) + hAt(c, r)
+
       // ---- Ground shadow grid (flat, faint) for depth reference ----
       ctx.lineWidth = 1
-      ctx.strokeStyle = 'rgba(150, 175, 220, 0.10)'
-      for (let r = 0; r < n; r += 2) {
+      ctx.strokeStyle = 'rgba(150, 175, 220, 0.08)'
+      for (let r = 0; r < n; r += 3) {
         ctx.beginPath()
         for (let c = 0; c < n; c++) {
           const p = project(c, r, 0)
@@ -267,7 +281,7 @@ export function GeoRadar({ location, active }: Props) {
         }
         ctx.stroke()
       }
-      for (let c = 0; c < n; c += 2) {
+      for (let c = 0; c < n; c += 3) {
         ctx.beginPath()
         for (let r = 0; r < n; r++) {
           const p = project(c, r, 0)
@@ -276,35 +290,34 @@ export function GeoRadar({ location, active }: Props) {
         ctx.stroke()
       }
 
-      // ---- Filled terrain quads, painter's order back→front ----
+      // ---- The topographic surface — always visible relief; precip glows ----
       for (let r = 0; r < n - 1; r++) {
         for (let c = 0; c < n - 1; c++) {
           const v = data.frames[fi].values[r * n + c]
-          const p00 = project(c, r, hAt(c, r))
-          const p10 = project(c + 1, r, hAt(c + 1, r))
-          const p11 = project(c + 1, r + 1, hAt(c + 1, r + 1))
-          const p01 = project(c, r + 1, hAt(c, r + 1))
+          const h00 = surfH(c, r)
+          const p00 = project(c, r, h00)
+          const p10 = project(c + 1, r, surfH(c + 1, r))
+          const p11 = project(c + 1, r + 1, surfH(c + 1, r + 1))
+          const p01 = project(c, r + 1, surfH(c, r + 1))
+          const lift = Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV))
+          // Base relief shading by height so the terrain always reads in 3-D.
+          const relief = Math.max(0, Math.min(1, (h00 / unit) * 0.5 + 0.2))
+          ctx.beginPath()
+          ctx.moveTo(p00.x, p00.y)
+          ctx.lineTo(p10.x, p10.y)
+          ctx.lineTo(p11.x, p11.y)
+          ctx.lineTo(p01.x, p01.y)
+          ctx.closePath()
           if (v > 0.03) {
-            const lift = Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV))
-            ctx.beginPath()
-            ctx.moveTo(p00.x, p00.y)
-            ctx.lineTo(p10.x, p10.y)
-            ctx.lineTo(p11.x, p11.y)
-            ctx.lineTo(p01.x, p01.y)
-            ctx.closePath()
-            ctx.fillStyle = heightColor(v, 0.28 + lift * 0.5)
+            ctx.fillStyle = heightColor(v, 0.3 + lift * 0.55)
             ctx.fill()
-            // glowing wire edge
-            ctx.strokeStyle = heightColor(v, 0.5 + lift * 0.5)
-            ctx.lineWidth = 1 + lift * 1.6
+            ctx.strokeStyle = heightColor(v, 0.55 + lift * 0.45)
+            ctx.lineWidth = 1 + lift * 1.8
             ctx.stroke()
           } else {
-            // faint mesh where it's dry
-            ctx.beginPath()
-            ctx.moveTo(p00.x, p00.y)
-            ctx.lineTo(p10.x, p10.y)
-            ctx.lineTo(p11.x, p11.y)
-            ctx.strokeStyle = 'rgba(150, 175, 220, 0.06)'
+            ctx.fillStyle = `rgba(90, 130, 200, ${0.05 + relief * 0.16})`
+            ctx.fill()
+            ctx.strokeStyle = `rgba(150, 185, 235, ${0.12 + relief * 0.22})`
             ctx.lineWidth = 1
             ctx.stroke()
           }
@@ -312,7 +325,6 @@ export function GeoRadar({ location, active }: Props) {
       }
 
       // ---- Rain particles falling into wet cells ----
-      const t0 = performance.now() / 1000
       for (const pt of particles.current) {
         const wet = sample(pt.gx, pt.gy, fi)
         pt.t += 0.016 * pt.speed * (wet > 0.05 ? 1.6 : 0.5)
@@ -322,8 +334,8 @@ export function GeoRadar({ location, active }: Props) {
           pt.gy = Math.random() * (n - 1)
         }
         if (wet < 0.05) continue
-        const ground = 0
-        const top = hAt(Math.round(pt.gx), Math.round(pt.gy)) + 0.6
+        const ground = surfH(Math.round(pt.gx), Math.round(pt.gy))
+        const top = ground + 0.6
         const h = top + (ground - top) * pt.t
         const p = project(pt.gx, pt.gy, h)
         const p2 = project(pt.gx, pt.gy, h + 0.12)
@@ -351,7 +363,7 @@ export function GeoRadar({ location, active }: Props) {
         }
       }
       if (peakV > 0.2) {
-        const p = project(peakC, peakR, hAt(peakC, peakR))
+        const p = project(peakC, peakR, surfH(peakC, peakR))
         const pulse = 0.5 + 0.5 * Math.sin(t0 * 3)
         const rad = (8 + pulse * 10) * p.persp * dpr
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad)
@@ -364,7 +376,8 @@ export function GeoRadar({ location, active }: Props) {
       }
 
       // ---- Center location marker ----
-      const cP = project((n - 1) / 2, (n - 1) / 2, hAt(Math.floor((n - 1) / 2), Math.floor((n - 1) / 2)) + 0.25)
+      const cm = Math.floor((n - 1) / 2)
+      const cP = project((n - 1) / 2, (n - 1) / 2, surfH(cm, cm) + 0.25)
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'
       ctx.lineWidth = 1.4 * dpr
       const ms = 5 * dpr
