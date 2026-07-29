@@ -9,12 +9,12 @@
   border-radius: 26px;
   overflow: hidden;
   background: radial-gradient(
-    120% 100% at 50% 12%,
-    rgba(40, 60, 110, 0.5),
-    rgba(12, 18, 40, 0.62) 70%
+    120% 100% at 50% 8%,
+    rgba(18, 30, 62, 0.92),
+    rgba(6, 10, 26, 0.96) 72%
   );
   border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   touch-action: none;
   cursor: grab;
 }

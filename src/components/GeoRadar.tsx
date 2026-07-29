@@ -266,13 +266,13 @@ export function GeoRadar({ location, active }: Props) {
         const w = r / (n - 1)
         const a = Math.sin(u * 6.2 + drift) * Math.cos(w * 5.1 - drift * 0.7)
         const b = Math.sin((u + w) * 4.3 + drift * 1.3)
-        return (a * 0.5 + b * 0.5) * unit * 0.55 + unit * 0.35
+        return (a * 0.5 + b * 0.5) * unit * 0.9 + unit * 0.5
       }
       const surfH = (c: number, r: number) => baseH(c, r) + hAt(c, r)
 
       // ---- Ground shadow grid (flat, faint) for depth reference ----
       ctx.lineWidth = 1
-      ctx.strokeStyle = 'rgba(150, 175, 220, 0.08)'
+      ctx.strokeStyle = 'rgba(150, 175, 220, 0.14)'
       for (let r = 0; r < n; r += 3) {
         ctx.beginPath()
         for (let c = 0; c < n; c++) {
@@ -300,8 +300,10 @@ export function GeoRadar({ location, active }: Props) {
           const p11 = project(c + 1, r + 1, surfH(c + 1, r + 1))
           const p01 = project(c, r + 1, surfH(c, r + 1))
           const lift = Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV))
-          // Base relief shading by height so the terrain always reads in 3-D.
-          const relief = Math.max(0, Math.min(1, (h00 / unit) * 0.5 + 0.2))
+          // Slope shading: compare this vertex height to its downhill neighbour
+          // so ridges catch light and valleys fall into shadow — strong 3-D read.
+          const slope = (h00 - surfH(c + 1, r + 1)) / unit
+          const relief = Math.max(0, Math.min(1, (h00 / unit) * 0.6 + 0.25))
           ctx.beginPath()
           ctx.moveTo(p00.x, p00.y)
           ctx.lineTo(p10.x, p10.y)
@@ -309,15 +311,20 @@ export function GeoRadar({ location, active }: Props) {
           ctx.lineTo(p01.x, p01.y)
           ctx.closePath()
           if (v > 0.03) {
-            ctx.fillStyle = heightColor(v, 0.3 + lift * 0.55)
+            ctx.fillStyle = heightColor(v, 0.34 + lift * 0.55)
             ctx.fill()
-            ctx.strokeStyle = heightColor(v, 0.55 + lift * 0.45)
-            ctx.lineWidth = 1 + lift * 1.8
+            ctx.strokeStyle = heightColor(v, 0.6 + lift * 0.4)
+            ctx.lineWidth = 1.2 + lift * 2
             ctx.stroke()
           } else {
-            ctx.fillStyle = `rgba(90, 130, 200, ${0.05 + relief * 0.16})`
+            // Elevation + slope shaded fill so the terrain is clearly 3-D.
+            const shade = Math.max(0, Math.min(1, 0.45 + slope * 0.9))
+            const rr = Math.round(70 + relief * 90 + shade * 40)
+            const gg = Math.round(110 + relief * 90 + shade * 45)
+            const bb = Math.round(170 + relief * 70 + shade * 40)
+            ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${0.16 + relief * 0.34})`
             ctx.fill()
-            ctx.strokeStyle = `rgba(150, 185, 235, ${0.12 + relief * 0.22})`
+            ctx.strokeStyle = `rgba(170, 205, 255, ${0.28 + relief * 0.4})`
             ctx.lineWidth = 1
             ctx.stroke()
           }
