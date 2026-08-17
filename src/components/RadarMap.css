@@ -10,6 +10,12 @@
   margin-bottom: 12px;
 }
 
+.radar-head-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .radar-frame-label {
   font-size: 13px;
   font-weight: 600;

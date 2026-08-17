@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { GeoLocation } from '../types'
+import type { GeoLocation, WeatherLayerId } from '../types'
+import type { BasemapStyleId } from '../lib/basemap'
 import { fetchRadar, type RadarData } from '../lib/radar'
+import {
+  fetchWeatherGrid,
+  bilinearGrid,
+  type WeatherGridData,
+} from '../lib/weatherLayers'
+import { MapLayers } from './MapLayers'
 import './GeoRadar.css'
 
 interface Props {
@@ -8,11 +15,64 @@ interface Props {
   active: boolean
 }
 
-/** Precip (mm/h) → geometric terrain colour: cool teal → cyan → white-hot. */
+// ---- Terrain color palettes per basemap style ----
+
+interface TerrainPalette {
+  base: [number, number, number]
+  baseAlpha: [number, number]
+  wire: string
+  wireAlpha: [number, number]
+  reliefMul: [number, number, number]
+  shadeMul: [number, number, number]
+}
+
+const PALETTES: Record<BasemapStyleId, TerrainPalette> = {
+  carto: {
+    base: [70, 110, 170],
+    baseAlpha: [0.16, 0.34],
+    wire: 'rgba(170, 205, 255,',
+    wireAlpha: [0.28, 0.68],
+    reliefMul: [90, 90, 70],
+    shadeMul: [40, 45, 40],
+  },
+  topo: {
+    base: [60, 120, 60],
+    baseAlpha: [0.18, 0.38],
+    wire: 'rgba(140, 190, 140,',
+    wireAlpha: [0.3, 0.7],
+    reliefMul: [80, 100, 60],
+    shadeMul: [30, 50, 30],
+  },
+  satellite: {
+    base: [50, 80, 45],
+    baseAlpha: [0.2, 0.4],
+    wire: 'rgba(120, 160, 110,',
+    wireAlpha: [0.25, 0.6],
+    reliefMul: [70, 85, 50],
+    shadeMul: [35, 40, 25],
+  },
+  terrain: {
+    base: [120, 95, 65],
+    baseAlpha: [0.18, 0.36],
+    wire: 'rgba(200, 170, 130,',
+    wireAlpha: [0.28, 0.65],
+    reliefMul: [100, 80, 55],
+    shadeMul: [45, 35, 25],
+  },
+  dark: {
+    base: [55, 75, 120],
+    baseAlpha: [0.14, 0.3],
+    wire: 'rgba(140, 170, 230,',
+    wireAlpha: [0.22, 0.55],
+    reliefMul: [75, 80, 70],
+    shadeMul: [35, 40, 38],
+  },
+}
+
+/** Precip (mm/h) → geometric terrain colour. */
 function heightColor(mm: number, a = 1): string {
   if (mm < 0.03) return `rgba(120, 150, 210, ${0.12 * a})`
   const t = Math.min(1, Math.log10(1 + mm) / Math.log10(1 + 14))
-  // teal → sky → violet → hot white
   const stops: [number, [number, number, number]][] = [
     [0, [64, 196, 200]],
     [0.35, [90, 170, 255]],
@@ -40,26 +100,25 @@ function heightColor(mm: number, a = 1): string {
 interface RainParticle {
   gx: number
   gy: number
-  t: number // 0..1 fall progress
+  t: number
   speed: number
 }
 
-/**
- * An interactive 3-D topographic precipitation radar — a tilted wireframe
- * terrain where rainfall raises glowing peaks. Drag to fly around, scroll or
- * pinch to zoom, and drag the time scrubber to travel forward through the
- * storms. Rendered entirely on canvas as layered geometry.
- */
 export function GeoRadar({ location, active }: Props) {
   const [data, setData] = useState<RadarData | null>(null)
   const [error, setError] = useState(false)
   const [frame, setFrame] = useState(0)
   const [playing, setPlaying] = useState(true)
 
+  // Layer state
+  const [basemapStyle, setBasemapStyle] = useState<BasemapStyleId>('carto')
+  const [overlays] = useState<never[]>([]) // unused in 3D view
+  const [weatherLayer, setWeatherLayer] = useState<WeatherLayerId | null>(null)
+  const [weatherOpacity, setWeatherOpacity] = useState(0.6)
+  const [weatherData, setWeatherData] = useState<WeatherGridData | null>(null)
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
-
-  // Camera state (mutable ref so the render loop reads live values).
   const cam = useRef({ yaw: 0.5, tilt: 1.02, zoom: 1, panX: 0, panY: 0 })
   const particles = useRef<RainParticle[]>([])
   const frameRef = useRef(0)
@@ -67,7 +126,7 @@ export function GeoRadar({ location, active }: Props) {
 
   frameRef.current = frame
 
-  // Fetch a wider, denser grid than the classic radar card.
+  // Fetch radar data.
   useEffect(() => {
     let alive = true
     setData(null)
@@ -77,12 +136,20 @@ export function GeoRadar({ location, active }: Props) {
     fetchRadar(location, { gridSize: 15, spanDeg: 1.1, days: 3 })
       .then((d) => alive && setData(d))
       .catch(() => alive && setError(true))
-    return () => {
-      alive = false
-    }
+    return () => { alive = false }
   }, [location])
 
-  // Auto-advance the storm timeline while the scene is on screen.
+  // Fetch weather grid data.
+  useEffect(() => {
+    if (!weatherLayer) { setWeatherData(null); return }
+    let alive = true
+    fetchWeatherGrid(location, weatherLayer, { gridSize: 15, spanDeg: 1.1, days: 3 })
+      .then((d) => { if (alive) setWeatherData(d) })
+      .catch(() => { if (alive) setWeatherData(null) })
+    return () => { alive = false }
+  }, [location, weatherLayer])
+
+  // Auto-advance timeline.
   useEffect(() => {
     if (!playing || !data || !active) return
     const id = window.setInterval(() => {
@@ -101,7 +168,6 @@ export function GeoRadar({ location, active }: Props) {
     let lastX = 0
     let lastY = 0
     let pinchDist = 0
-
     const onDown = (e: PointerEvent) => {
       dragging = true
       lastX = e.clientX
@@ -122,27 +188,20 @@ export function GeoRadar({ location, active }: Props) {
         cam.current.tilt = Math.max(0.5, Math.min(1.35, cam.current.tilt + dy * 0.004))
       }
     }
-    const onUp = () => {
-      dragging = false
-    }
+    const onUp = () => { dragging = false }
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       cam.current.zoom = Math.max(0.6, Math.min(3.2, cam.current.zoom * (e.deltaY < 0 ? 1.08 : 0.93)))
     }
-    // Two-finger pinch zoom.
     const touchPts = new Map<number, { x: number; y: number }>()
-    const onTDown = (e: PointerEvent) => {
-      touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY })
-    }
+    const onTDown = (e: PointerEvent) => { touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY }) }
     const onTMove = (e: PointerEvent) => {
       if (!touchPts.has(e.pointerId)) return
       touchPts.set(e.pointerId, { x: e.clientX, y: e.clientY })
       if (touchPts.size === 2) {
         const [a, b] = [...touchPts.values()]
         const d = Math.hypot(a.x - b.x, a.y - b.y)
-        if (pinchDist) {
-          cam.current.zoom = Math.max(0.6, Math.min(3.2, cam.current.zoom * (d / pinchDist)))
-        }
+        if (pinchDist) cam.current.zoom = Math.max(0.6, Math.min(3.2, cam.current.zoom * (d / pinchDist)))
         pinchDist = d
       }
     }
@@ -150,7 +209,6 @@ export function GeoRadar({ location, active }: Props) {
       touchPts.delete(e.pointerId)
       if (touchPts.size < 2) pinchDist = 0
     }
-
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointermove', onMove)
     window.addEventListener('pointerup', onUp)
@@ -169,7 +227,7 @@ export function GeoRadar({ location, active }: Props) {
     }
   }, [])
 
-  // The render loop — draws the wireframe terrain + rain every frame.
+  // The render loop.
   useEffect(() => {
     if (!data) return
     const canvas = canvasRef.current
@@ -180,7 +238,6 @@ export function GeoRadar({ location, active }: Props) {
     const n = data.gridSize
     const dpr = Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1)
 
-    // Seed rain particles.
     if (particles.current.length === 0) {
       particles.current = Array.from({ length: 90 }, () => ({
         gx: Math.random() * (n - 1),
@@ -190,7 +247,6 @@ export function GeoRadar({ location, active }: Props) {
       }))
     }
 
-    // Smoothly interpolated precip lookup for a fractional grid point + frame.
     const sample = (gx: number, gy: number, fi: number): number => {
       const x0 = Math.max(0, Math.min(n - 1, Math.floor(gx)))
       const y0 = Math.max(0, Math.min(n - 1, Math.floor(gy)))
@@ -199,23 +255,20 @@ export function GeoRadar({ location, active }: Props) {
       const fx = gx - x0
       const fy = gy - y0
       const v = data.frames[fi].values
-      const a = v[y0 * n + x0]
-      const b = v[y0 * n + x1]
-      const c = v[y1 * n + x0]
-      const d = v[y1 * n + x1]
-      return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy
+      return (v[y0 * n + x0] + (v[y0 * n + x1] - v[y0 * n + x0]) * fx) * (1 - fy) +
+        (v[y1 * n + x0] + (v[y1 * n + x1] - v[y1 * n + x0]) * fx) * fy
     }
 
     let running = true
+    const pal = PALETTES[basemapStyle] ?? PALETTES.carto
+    const baseRgb = pal.base
+
     const draw = () => {
       if (!running) return
       const rect = canvas.getBoundingClientRect()
       const W = Math.max(1, Math.round(rect.width * dpr))
       const H = Math.max(1, Math.round(rect.height * dpr))
-      if (canvas.width !== W || canvas.height !== H) {
-        canvas.width = W
-        canvas.height = H
-      }
+      if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H }
       ctx.clearRect(0, 0, W, H)
 
       const t0 = performance.now() / 1000
@@ -225,31 +278,22 @@ export function GeoRadar({ location, active }: Props) {
       const cy = H * 0.56
       const spread = Math.min(W, H) * 0.62 * zoom
       const elevH = Math.min(W, H) * 0.26
-
       const cosT = Math.cos(tilt)
       const sinT = Math.sin(tilt)
       const cosY = Math.cos(yaw)
       const sinY = Math.sin(yaw)
 
-      // Project a grid vertex (col c, row r) to screen space.
       const project = (c: number, r: number, h: number) => {
         let wx = (c / (n - 1) - 0.5) * 2 + panX
         let wy = (r / (n - 1) - 0.5) * 2 + panY
-        // yaw around vertical
         const rx = wx * cosY - wy * sinY
         const rz0 = wx * sinY + wy * cosY
         wx = rx
         wy = rz0
-        // tilt around X, elevation lifts toward camera
         const ry = wy * cosT - h * sinT
         const depth = wy * sinT + h * cosT
         const persp = 2.4 / (2.4 + depth)
-        return {
-          x: cx + wx * spread * persp,
-          y: cy + ry * spread * persp - h * elevH * persp * 0.0,
-          persp,
-          depth,
-        }
+        return { x: cx + wx * spread * persp, y: cy + ry * spread * persp - h * elevH * persp * 0.0, persp, depth }
       }
 
       const hAt = (c: number, r: number) => {
@@ -257,8 +301,6 @@ export function GeoRadar({ location, active }: Props) {
         return Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV)) * (elevH / spread) * 3.2
       }
 
-      // Always-present rolling "topography" so the map reads as 3-D terrain even
-      // when it's completely dry — gentle layered sine hills drifting over time.
       const unit = elevH / spread
       const drift = t0 * 0.06
       const baseH = (c: number, r: number) => {
@@ -270,9 +312,9 @@ export function GeoRadar({ location, active }: Props) {
       }
       const surfH = (c: number, r: number) => baseH(c, r) + hAt(c, r)
 
-      // ---- Ground shadow grid (flat, faint) for depth reference ----
+      // Ground shadow grid.
       ctx.lineWidth = 1
-      ctx.strokeStyle = 'rgba(150, 175, 220, 0.14)'
+      ctx.strokeStyle = pal.wire + '0.14)'
       for (let r = 0; r < n; r += 3) {
         ctx.beginPath()
         for (let c = 0; c < n; c++) {
@@ -290,7 +332,7 @@ export function GeoRadar({ location, active }: Props) {
         ctx.stroke()
       }
 
-      // ---- The topographic surface — always visible relief; precip glows ----
+      // Topographic surface.
       for (let r = 0; r < n - 1; r++) {
         for (let c = 0; c < n - 1; c++) {
           const v = data.frames[fi].values[r * n + c]
@@ -300,8 +342,6 @@ export function GeoRadar({ location, active }: Props) {
           const p11 = project(c + 1, r + 1, surfH(c + 1, r + 1))
           const p01 = project(c, r + 1, surfH(c, r + 1))
           const lift = Math.min(1, Math.log10(1 + v) / Math.log10(1 + maxV))
-          // Slope shading: compare this vertex height to its downhill neighbour
-          // so ridges catch light and valleys fall into shadow — strong 3-D read.
           const slope = (h00 - surfH(c + 1, r + 1)) / unit
           const relief = Math.max(0, Math.min(1, (h00 / unit) * 0.6 + 0.25))
           ctx.beginPath()
@@ -310,28 +350,47 @@ export function GeoRadar({ location, active }: Props) {
           ctx.lineTo(p11.x, p11.y)
           ctx.lineTo(p01.x, p01.y)
           ctx.closePath()
-          if (v > 0.03) {
+
+          // If a weather layer is active, tint the terrain with weather data.
+          if (weatherLayer && weatherData && v <= 0.03) {
+            const wN = weatherData.gridSize
+            const wGx = (c / (n - 1)) * (wN - 1)
+            const wGy = (r / (n - 1)) * (wN - 1)
+            const wVal = bilinearGrid(weatherData, fi, wGx, wGy)
+            const wDir = weatherData.frames[fi].values2 ? bilinearGrid(weatherData, fi, wGx, wGy, true) : 0
+            // Tint terrain: blend base palette with weather color.
+            const wt = Math.min(0.7, weatherOpacity * (wVal / (weatherLayer === 'temperature' ? 40 : weatherLayer === 'wind' ? 80 : weatherLayer === 'pressure' ? 1040 : weatherLayer === 'cloud' ? 100 : 10)))
+            const wRgb = weatherTint(weatherLayer, wVal, wDir)
+            const shade = Math.max(0, Math.min(1, 0.45 + slope * 0.9))
+            const rr = Math.round(baseRgb[0] + relief * pal.reliefMul[0] + shade * pal.shadeMul[0] + (wRgb[0] - baseRgb[0]) * wt)
+            const gg = Math.round(baseRgb[1] + relief * pal.reliefMul[1] + shade * pal.shadeMul[1] + (wRgb[1] - baseRgb[1]) * wt)
+            const bb = Math.round(baseRgb[2] + relief * pal.reliefMul[2] + shade * pal.shadeMul[2] + (wRgb[2] - baseRgb[2]) * wt)
+            ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${pal.baseAlpha[0] + relief * pal.baseAlpha[1]})`
+            ctx.fill()
+            ctx.strokeStyle = pal.wire + `${pal.wireAlpha[0] + relief * pal.wireAlpha[1]})`
+            ctx.lineWidth = 1
+            ctx.stroke()
+          } else if (v > 0.03) {
             ctx.fillStyle = heightColor(v, 0.34 + lift * 0.55)
             ctx.fill()
             ctx.strokeStyle = heightColor(v, 0.6 + lift * 0.4)
             ctx.lineWidth = 1.2 + lift * 2
             ctx.stroke()
           } else {
-            // Elevation + slope shaded fill so the terrain is clearly 3-D.
             const shade = Math.max(0, Math.min(1, 0.45 + slope * 0.9))
-            const rr = Math.round(70 + relief * 90 + shade * 40)
-            const gg = Math.round(110 + relief * 90 + shade * 45)
-            const bb = Math.round(170 + relief * 70 + shade * 40)
-            ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${0.16 + relief * 0.34})`
+            const rr = Math.round(baseRgb[0] + relief * pal.reliefMul[0] + shade * pal.shadeMul[0])
+            const gg = Math.round(baseRgb[1] + relief * pal.reliefMul[1] + shade * pal.shadeMul[1])
+            const bb = Math.round(baseRgb[2] + relief * pal.reliefMul[2] + shade * pal.shadeMul[2])
+            ctx.fillStyle = `rgba(${rr}, ${gg}, ${bb}, ${pal.baseAlpha[0] + relief * pal.baseAlpha[1]})`
             ctx.fill()
-            ctx.strokeStyle = `rgba(170, 205, 255, ${0.28 + relief * 0.4})`
+            ctx.strokeStyle = pal.wire + `${pal.wireAlpha[0] + relief * pal.wireAlpha[1]})`
             ctx.lineWidth = 1
             ctx.stroke()
           }
         }
       }
 
-      // ---- Rain particles falling into wet cells ----
+      // Rain particles.
       for (const pt of particles.current) {
         const wet = sample(pt.gx, pt.gy, fi)
         pt.t += 0.016 * pt.speed * (wet > 0.05 ? 1.6 : 0.5)
@@ -343,9 +402,9 @@ export function GeoRadar({ location, active }: Props) {
         if (wet < 0.05) continue
         const ground = surfH(Math.round(pt.gx), Math.round(pt.gy))
         const top = ground + 0.6
-        const h = top + (ground - top) * pt.t
-        const p = project(pt.gx, pt.gy, h)
-        const p2 = project(pt.gx, pt.gy, h + 0.12)
+        const ht = top + (ground - top) * pt.t
+        const p = project(pt.gx, pt.gy, ht)
+        const p2 = project(pt.gx, pt.gy, ht + 0.12)
         const a = 0.5 * (1 - pt.t) + 0.2
         ctx.strokeStyle = heightColor(wet, a)
         ctx.lineWidth = 1.4
@@ -355,18 +414,12 @@ export function GeoRadar({ location, active }: Props) {
         ctx.stroke()
       }
 
-      // ---- Storm core pulses at the strongest cells ----
-      let peakV = 0
-      let peakC = 0
-      let peakR = 0
+      // Storm core pulses.
+      let peakV = 0, peakC = 0, peakR = 0
       for (let r = 0; r < n; r++) {
         for (let c = 0; c < n; c++) {
           const v = data.frames[fi].values[r * n + c]
-          if (v > peakV) {
-            peakV = v
-            peakC = c
-            peakR = r
-          }
+          if (v > peakV) { peakV = v; peakC = c; peakR = r }
         }
       }
       if (peakV > 0.2) {
@@ -382,37 +435,31 @@ export function GeoRadar({ location, active }: Props) {
         ctx.fill()
       }
 
-      // ---- Center location marker ----
+      // Center marker.
       const cm = Math.floor((n - 1) / 2)
       const cP = project((n - 1) / 2, (n - 1) / 2, surfH(cm, cm) + 0.25)
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'
       ctx.lineWidth = 1.4 * dpr
       const ms = 5 * dpr
       ctx.beginPath()
-      ctx.moveTo(cP.x - ms, cP.y)
-      ctx.lineTo(cP.x + ms, cP.y)
-      ctx.moveTo(cP.x, cP.y - ms)
-      ctx.lineTo(cP.x, cP.y + ms)
+      ctx.moveTo(cP.x - ms, cP.y); ctx.lineTo(cP.x + ms, cP.y)
+      ctx.moveTo(cP.x, cP.y - ms); ctx.lineTo(cP.x, cP.y + ms)
       ctx.stroke()
 
       rafRef.current = requestAnimationFrame(draw)
     }
     rafRef.current = requestAnimationFrame(draw)
-    return () => {
-      running = false
-      cancelAnimationFrame(rafRef.current)
-    }
-  }, [data, maxV])
+    return () => { running = false; cancelAnimationFrame(rafRef.current) }
+  }, [data, maxV, basemapStyle, weatherLayer, weatherData, weatherOpacity])
 
   const frameLabel = useMemo(() => {
     if (!data) return ''
     const t = data.frames[frame]?.time
     if (!t) return ''
     const d = new Date(t)
-    const now = new Date()
     const dd = Math.round((new Date(t).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000)
     const hr = d.toLocaleTimeString([], { hour: 'numeric' })
-    const rel = Math.round((d.getTime() - now.getTime()) / 3600000)
+    const rel = Math.round((d.getTime() - Date.now()) / 3600000)
     const day = dd === 0 ? 'Today' : dd === 1 ? 'Tomorrow' : d.toLocaleDateString([], { weekday: 'short' })
     return `${day} ${hr} · +${rel}h`
   }, [data, frame])
@@ -427,6 +474,18 @@ export function GeoRadar({ location, active }: Props) {
       <div className="gj-chapter">Storms</div>
       <div className="gjr-wrap" ref={wrapRef}>
         <canvas ref={canvasRef} className="gjr-canvas" />
+        <div className="gjr-layers">
+          <MapLayers
+            basemap={basemapStyle}
+            onBasemapChange={setBasemapStyle}
+            overlays={overlays}
+            onOverlaysChange={() => {}}
+            weatherLayer={weatherLayer}
+            onWeatherLayerChange={setWeatherLayer}
+            weatherOpacity={weatherOpacity}
+            onWeatherOpacityChange={setWeatherOpacity}
+          />
+        </div>
         {!data && !error && <div className="gjr-status">Charting the skies…</div>}
         {error && <div className="gjr-status">Radar unavailable right now.</div>}
         {data && (
@@ -462,4 +521,57 @@ export function GeoRadar({ location, active }: Props) {
       <div className="gj-end">— end of the journey —</div>
     </section>
   )
+}
+
+/** Map a weather layer value to an RGB tint for the terrain surface. */
+function weatherTint(layer: WeatherLayerId, val: number, _dir: number): [number, number, number] {
+  switch (layer) {
+    case 'temperature': {
+      // Cold blue → warm orange
+      const t = Math.max(0, Math.min(1, (val + 10) / 50))
+      return [
+        Math.round(80 + t * 160),
+        Math.round(120 + Math.abs(t - 0.5) * -80 + 40),
+        Math.round(220 - t * 140),
+      ]
+    }
+    case 'wind': {
+      const t = Math.min(1, val / 80)
+      return [
+        Math.round(100 + t * 140),
+        Math.round(200 - t * 60),
+        Math.round(255 - t * 180),
+      ]
+    }
+    case 'cloud': {
+      const t = Math.min(1, val / 100)
+      const v = Math.round(100 + t * 140)
+      return [v, v + 5, v + 15]
+    }
+    case 'pressure': {
+      const t = Math.max(0, Math.min(1, (val - 980) / 60))
+      return [
+        Math.round(180 - t * 120),
+        Math.round(80 + t * 100),
+        Math.round(80 + t * 140),
+      ]
+    }
+    case 'snow': {
+      const t = Math.min(1, val / 8)
+      return [
+        Math.round(200 - t * 80),
+        Math.round(220 - t * 40),
+        Math.round(255),
+      ]
+    }
+    default: {
+      // precipitation
+      const t = Math.min(1, val / 10)
+      return [
+        Math.round(80 + t * 120),
+        Math.round(170 + t * 30),
+        Math.round(255 - t * 100),
+      ]
+    }
+  }
 }

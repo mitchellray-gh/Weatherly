@@ -110,6 +110,8 @@ export type WindUnit = 'kmh' | 'mph'
 export type PrecipUnit = 'mm' | 'inch'
 export type Theme = 'auto' | 'book' | 'geo'
 
+export type WeatherLayerId = 'precipitation' | 'wind' | 'temperature' | 'cloud' | 'pressure' | 'snow'
+
 export interface Settings {
   temperature: TemperatureUnit
   wind: WindUnit

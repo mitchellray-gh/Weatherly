@@ -1,8 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { GeoLocation } from '../types'
+import type { GeoLocation, WeatherLayerId } from '../types'
+import type { BasemapStyleId, OverlayId } from '../lib/basemap'
+import { computeBasemap, computeOverlay, loadTile, type BasemapTile } from '../lib/basemap'
 import { fetchRadar, radarColor, type RadarData } from '../lib/radar'
-import { computeBasemap, loadTile, type BasemapTile } from '../lib/basemap'
+import {
+  fetchWeatherGrid,
+  bilinearGrid,
+  layerColor,
+  drawWindArrow,
+  type WeatherGridData,
+} from '../lib/weatherLayers'
 import { MEASURABLE_MM } from '../lib/precip'
+import { MapLayers } from './MapLayers'
 import './RadarMap.css'
 
 interface Props {
@@ -10,14 +19,13 @@ interface Props {
   onOpenDetail?: () => void
 }
 
-const BUF = 72 // interpolation buffer resolution (BUF x BUF)
+const BUF = 72
 
 interface LoadedTile extends BasemapTile {
   img: HTMLImageElement
 }
 
 function bilinear(data: RadarData, frameIdx: number, gx: number, gy: number): number {
-  // gx, gy are fractional grid coordinates in [0, gridSize-1].
   const n = data.gridSize
   const x0 = Math.max(0, Math.min(n - 1, Math.floor(gx)))
   const y0 = Math.max(0, Math.min(n - 1, Math.floor(gy)))
@@ -41,15 +49,22 @@ export function RadarMap({ location, onOpenDetail }: Props) {
   const [frame, setFrame] = useState(0)
   const [playing, setPlaying] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [zoom, setZoom] = useState(1) // 1 = full area; higher = tighter/bigger labels
+  const [zoom, setZoom] = useState(1)
   const [tiles, setTiles] = useState<LoadedTile[]>([])
+
+  // Layer state
+  const [basemapStyle, setBasemapStyle] = useState<BasemapStyleId>('carto')
+  const [overlays, setOverlays] = useState<OverlayId[]>([])
+  const [overlayTiles, setOverlayTiles] = useState<LoadedTile[]>([])
+  const [weatherLayer, setWeatherLayer] = useState<WeatherLayerId | null>(null)
+  const [weatherOpacity, setWeatherOpacity] = useState(0.6)
+  const [weatherData, setWeatherData] = useState<WeatherGridData | null>(null)
+
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const bufRef = useRef<HTMLCanvasElement | null>(null)
 
-  // Crisp rendering resolution (device pixels).
   const RES = Math.round(320 * Math.min(2, typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1))
 
-  // Visible geographic box for the current zoom (cropped around center).
   const bbox = useMemo(() => {
     if (!data) return null
     const frac = 1 / zoom
@@ -61,6 +76,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     return { west, east, north, south }
   }, [data, zoom])
 
+  // Reset state on location change.
   useEffect(() => {
     let alive = true
     setData(null)
@@ -70,6 +86,8 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     setExpanded(false)
     setZoom(1)
     setTiles([])
+    setOverlayTiles([])
+    setWeatherData(null)
     fetchRadar(location, { gridSize: 11, spanDeg: 0.55, days: 7 })
       .then((d) => {
         if (alive) setData(d)
@@ -82,11 +100,11 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     }
   }, [location])
 
-  // Load the basemap tiles that cover the (zoomed) radar bounding box.
+  // Load basemap tiles for the selected style.
   useEffect(() => {
     if (!data || !bbox) return
     let alive = true
-    const { tiles: specs } = computeBasemap(bbox.west, bbox.east, bbox.north, bbox.south, RES, RES)
+    const { tiles: specs } = computeBasemap(bbox.west, bbox.east, bbox.north, bbox.south, RES, RES, basemapStyle)
     Promise.all(
       specs.map((s) =>
         loadTile(s.url)
@@ -99,7 +117,50 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     return () => {
       alive = false
     }
-  }, [data, bbox, RES])
+  }, [data, bbox, RES, basemapStyle])
+
+  // Load overlay tiles.
+  useEffect(() => {
+    if (!data || !bbox || overlays.length === 0) {
+      setOverlayTiles([])
+      return
+    }
+    let alive = true
+    // Use the first enabled overlay (could extend to support multiple).
+    const overlayId = overlays[0]
+    const { tiles: specs } = computeOverlay(bbox.west, bbox.east, bbox.north, bbox.south, RES, RES, overlayId)
+    Promise.all(
+      specs.map((s) =>
+        loadTile(s.url)
+          .then((img) => ({ ...s, img }) as LoadedTile)
+          .catch(() => null),
+      ),
+    ).then((loaded) => {
+      if (alive) setOverlayTiles(loaded.filter((t): t is LoadedTile => t !== null))
+    })
+    return () => {
+      alive = false
+    }
+  }, [data, bbox, RES, overlays])
+
+  // Fetch weather grid data.
+  useEffect(() => {
+    if (!data || !weatherLayer) {
+      setWeatherData(null)
+      return
+    }
+    let alive = true
+    fetchWeatherGrid(location, weatherLayer, { gridSize: 15, spanDeg: 0.65, days: 3 })
+      .then((d) => {
+        if (alive) setWeatherData(d)
+      })
+      .catch(() => {
+        if (alive) setWeatherData(null)
+      })
+    return () => {
+      alive = false
+    }
+  }, [location, weatherLayer])
 
   // Playback loop.
   useEffect(() => {
@@ -118,7 +179,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     if (!ctx) return
 
     // Render precipitation into a small offscreen buffer, then upscale smoothly.
-    // Only the visible (zoomed) portion of the grid is sampled.
     if (!bufRef.current) bufRef.current = document.createElement('canvas')
     const buf = bufRef.current
     buf.width = BUF
@@ -156,7 +216,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     const h = canvas.height
     ctx.clearRect(0, 0, w, h)
 
-    // Basemap tiles (geographic context) first.
+    // Layer 1: Basemap tiles.
     if (tiles.length > 0) {
       for (const t of tiles) {
         try {
@@ -167,14 +227,80 @@ export function RadarMap({ location, onOpenDetail }: Props) {
       }
     }
 
-    // Precipitation overlay on top of the map.
+    // Layer 2: Overlay tiles (hillshade/contours).
+    if (overlayTiles.length > 0) {
+      ctx.globalAlpha = 0.35
+      for (const t of overlayTiles) {
+        try {
+          ctx.drawImage(t.img, t.dx, t.dy, t.dw, t.dh)
+        } catch {
+          /* skip */
+        }
+      }
+      ctx.globalAlpha = 1
+    }
+
+    // Layer 3: Weather overlay (wind, temperature, etc.).
+    if (weatherData && weatherLayer) {
+      ctx.globalAlpha = weatherOpacity
+      const wN = weatherData.gridSize
+      const wFrac = 1 / zoom
+      const wCenter = (wN - 1) / 2
+      const wHalf = ((wN - 1) / 2) * wFrac
+      const cellW = w / BUF
+      const cellH = h / BUF
+      const step = weatherLayer === 'wind' ? 6 : 4
+      if (weatherLayer === 'wind') {
+        // Draw wind arrows on a grid.
+        for (let py = 0; py < BUF; py += step) {
+          for (let px = 0; px < BUF; px += step) {
+            const gx = wCenter - wHalf + (px / (BUF - 1)) * (2 * wHalf)
+            const gy = wCenter - wHalf + (py / (BUF - 1)) * (2 * wHalf)
+            const speed = bilinearGrid(weatherData, frame, gx, gy)
+            const dir = bilinearGrid(weatherData, frame, gx, gy, true)
+            drawWindArrow(ctx, px * cellW + cellW / 2, py * cellH + cellH / 2, speed, dir, cellW * step * 0.5, weatherOpacity)
+          }
+        }
+      } else {
+        // Color ramp overlay: render into a small buffer and upscale.
+        if (!bufRef.current) bufRef.current = document.createElement('canvas')
+        const wbuf = document.createElement('canvas')
+        wbuf.width = BUF
+        wbuf.height = BUF
+        const wctx = wbuf.getContext('2d')!
+        const wimg = wctx.createImageData(BUF, BUF)
+        for (let py = 0; py < BUF; py++) {
+          for (let px = 0; px < BUF; px++) {
+            const gx = wCenter - wHalf + (px / (BUF - 1)) * (2 * wHalf)
+            const gy = wCenter - wHalf + (py / (BUF - 1)) * (2 * wHalf)
+            const val = bilinearGrid(weatherData, frame, gx, gy)
+            const rgba = layerColor(weatherLayer, val, 0.8)
+            const m = /rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/.exec(rgba)
+            const idx = (py * BUF + px) * 4
+            if (m) {
+              wimg.data[idx] = +m[1]
+              wimg.data[idx + 1] = +m[2]
+              wimg.data[idx + 2] = +m[3]
+              wimg.data[idx + 3] = Math.round(parseFloat(m[4]) * 255)
+            } else {
+              wimg.data[idx + 3] = 0
+            }
+          }
+        }
+        wctx.putImageData(wimg, 0, 0)
+        ctx.drawImage(wbuf, 0, 0, w, h)
+      }
+      ctx.globalAlpha = 1
+    }
+
+    // Layer 4: Precipitation overlay.
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
     ctx.globalAlpha = 0.72
     ctx.drawImage(buf, 0, 0, w, h)
     ctx.globalAlpha = 1
 
-    // Subtle range rings (light basemap → dark, low-opacity rings).
+    // Subtle range rings.
     const cx = w / 2
     const cy = h / 2
     const scale = w / 320
@@ -186,7 +312,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
       ctx.stroke()
     }
 
-    // "You are here" marker with a soft halo for contrast on any background.
+    // "You are here" marker.
     ctx.beginPath()
     ctx.arc(cx, cy, 11 * scale, 0, Math.PI * 2)
     ctx.fillStyle = 'rgba(255,255,255,0.55)'
@@ -198,7 +324,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     ctx.lineWidth = 2.5 * scale
     ctx.strokeStyle = '#ffffff'
     ctx.stroke()
-  }, [data, frame, tiles, expanded, zoom, RES])
+  }, [data, frame, tiles, overlayTiles, weatherData, weatherLayer, weatherOpacity, expanded, zoom, RES])
 
   const frameLabel = useMemo(() => {
     if (!data) return ''
@@ -212,7 +338,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     })} · ${rel}`
   }, [data, frame])
 
-  // Fraction of grid cells with measurable precipitation in the current frame.
   const frameCoverage = useMemo(() => {
     if (!data) return 0
     const vals = data.frames[frame]?.values ?? []
@@ -223,7 +348,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
 
   const dryEverywhere = data != null && data.maxValue < MEASURABLE_MM
 
-  // First upcoming frame that actually has precipitation anywhere in the area.
   const nextRain = useMemo(() => {
     if (!data) return null
     const now = Date.now()
@@ -238,7 +362,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
   const hoursUntilRain = nextRain ? (nextRain.time.getTime() - Date.now()) / 3600000 : Infinity
   const rainSoon = hoursUntilRain <= 10
 
-  // Auto-expand the map when rain is imminent; otherwise stay collapsed.
   useEffect(() => {
     if (!data) return
     if (rainSoon && nextRain) {
@@ -248,7 +371,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
-  // Jump the scrubber to the next precipitation and expand the map.
   function jumpToRain() {
     if (!data || !nextRain) return
     setExpanded(true)
@@ -274,6 +396,17 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     return `${when} · ${abs}`
   }
 
+  const attribution = useMemo(() => {
+    const base = basemapStyle === 'carto' || basemapStyle === 'dark'
+      ? '© OpenStreetMap contributors, © CARTO'
+      : basemapStyle === 'topo'
+        ? '© OpenMapTiles, © OpenStreetMap'
+        : basemapStyle === 'satellite'
+          ? '© Esri, Maxar'
+          : '© Esri, USGS'
+    return weatherLayer ? `${base} · Data by Open-Meteo` : base
+  }, [basemapStyle, weatherLayer])
+
   if (error) {
     return (
       <section className="radar glass">
@@ -285,7 +418,6 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     )
   }
 
-  // Loading placeholder.
   if (!data) {
     return (
       <section className="radar glass">
@@ -297,8 +429,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     )
   }
 
-  // Fully dry over the whole forecast window.
-  if (dryEverywhere) {
+  if (dryEverywhere && !weatherLayer) {
     return (
       <section className="radar glass">
         <div className="radar-collapsed">
@@ -312,8 +443,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     )
   }
 
-  // Rain exists but not within 10 hours → compact prompt (map hidden by default).
-  if (!expanded) {
+  if (!expanded && !weatherLayer) {
     return (
       <section className="radar glass">
         <button className="radar-collapsed radar-collapsed-btn" onClick={jumpToRain}>
@@ -331,9 +461,21 @@ export function RadarMap({ location, onOpenDetail }: Props) {
     <section className="radar glass">
       <div className="radar-head">
         <h2 className="section-title" style={{ margin: 0 }}>
-          Precipitation Radar
+          {weatherLayer ? 'Weather Map' : 'Precipitation Radar'}
         </h2>
-        <span className="radar-frame-label">{frameLabel}</span>
+        <div className="radar-head-controls">
+          <span className="radar-frame-label">{frameLabel}</span>
+          <MapLayers
+            basemap={basemapStyle}
+            onBasemapChange={setBasemapStyle}
+            overlays={overlays}
+            onOverlaysChange={setOverlays}
+            weatherLayer={weatherLayer}
+            onWeatherLayerChange={setWeatherLayer}
+            weatherOpacity={weatherOpacity}
+            onWeatherOpacityChange={setWeatherOpacity}
+          />
+        </div>
       </div>
 
       <div className="radar-stage">
@@ -358,7 +500,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
           </button>
         </div>
         <div className="radar-scalebar">~{Math.round(120 / zoom)} km across</div>
-        <div className="radar-attribution">© OpenStreetMap · CARTO</div>
+        <div className="radar-attribution">{attribution}</div>
       </div>
 
       <div className="radar-controls">
