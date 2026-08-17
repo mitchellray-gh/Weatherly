@@ -12,6 +12,7 @@ import {
 } from '../lib/weatherLayers'
 import { MEASURABLE_MM } from '../lib/precip'
 import { MapLayers } from './MapLayers'
+import { LayerLegend } from './LayerLegend'
 import './RadarMap.css'
 
 interface Props {
@@ -258,7 +259,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
             const gy = wCenter - wHalf + (py / (BUF - 1)) * (2 * wHalf)
             const speed = bilinearGrid(weatherData, frame, gx, gy)
             const dir = bilinearGrid(weatherData, frame, gx, gy, true)
-            drawWindArrow(ctx, px * cellW + cellW / 2, py * cellH + cellH / 2, speed, dir, cellW * step * 0.5, weatherOpacity)
+            drawWindArrow(ctx, px * cellW + cellW / 2, py * cellH + cellH / 2, speed, dir, cellW * step * 0.75, weatherOpacity)
           }
         }
       } else {
@@ -525,11 +526,7 @@ export function RadarMap({ location, onOpenDetail }: Props) {
         />
       </div>
 
-      <div className="radar-legend">
-        <span className="radar-legend-label">Light</span>
-        <span className="radar-legend-bar" />
-        <span className="radar-legend-label">Heavy</span>
-      </div>
+      <LayerLegend layer={weatherLayer} />
 
       <div className="radar-footer">
         <button className="radar-jump" onClick={jumpToRain}>

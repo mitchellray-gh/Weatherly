@@ -276,7 +276,7 @@ export function drawWindArrow(
 ) {
   if (speed < 1) return
   const rad = (direction * Math.PI) / 180
-  const len = Math.min(size * 2, 4 + speed * 0.15)
+  const len = Math.min(size * 2.8, 6 + speed * 0.22)
   const ex = x + Math.sin(rad) * len
   const ey = y - Math.cos(rad) * len
   const c = colorFromStops(
@@ -285,16 +285,16 @@ export function drawWindArrow(
     120,
   )
   ctx.strokeStyle = `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${alpha})`
-  ctx.lineWidth = Math.max(1, size * 0.12)
+  ctx.lineWidth = Math.max(2, size * 0.18)
   ctx.lineCap = 'round'
   ctx.beginPath()
   ctx.moveTo(x, y)
   ctx.lineTo(ex, ey)
   ctx.stroke()
-  // Arrowhead
-  const headLen = size * 0.3
-  const a1 = rad + Math.PI * 0.8
-  const a2 = rad - Math.PI * 0.8
+  // Arrowhead — larger and more visible
+  const headLen = size * 0.45
+  const a1 = rad + Math.PI * 0.78
+  const a2 = rad - Math.PI * 0.78
   ctx.beginPath()
   ctx.moveTo(ex, ey)
   ctx.lineTo(ex + Math.sin(a1) * headLen, ey - Math.cos(a1) * headLen)
