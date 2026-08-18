@@ -19,8 +19,11 @@
 .radar-frame-label {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.85);
   white-space: nowrap;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 3px 10px;
+  border-radius: 999px;
 }
 
 .radar-stage {
@@ -48,7 +51,7 @@
   align-items: center;
   justify-content: center;
   font-size: 14px;
-  color: var(--text-faint);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .radar-scalebar {
@@ -142,7 +145,7 @@
 
 .radar-collapsed-sub {
   font-size: 13px;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.7);
   margin-top: 2px;
 }
 
@@ -157,12 +160,12 @@
 .radar-hide {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-faint);
+  color: rgba(255, 255, 255, 0.7);
   transition: color 0.15s;
 }
 
 .radar-hide:hover {
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .radar-coverage {
@@ -188,7 +191,7 @@
   text-align: center;
   padding: 20px;
   font-size: 14px;
-  color: var(--text-dim);
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .radar-dry-emoji {
@@ -298,14 +301,14 @@
 
 .radar-note {
   font-size: 12px;
-  color: var(--text-faint);
+  color: rgba(255, 255, 255, 0.65);
   text-align: center;
   margin: 10px 0 0;
 }
 
 .radar-empty {
   font-size: 15px;
-  color: var(--text-faint);
+  color: rgba(255, 255, 255, 0.65);
   text-align: center;
   padding: 20px 0;
 }
