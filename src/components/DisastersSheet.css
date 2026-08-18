@@ -94,6 +94,43 @@
   border-color: rgba(255, 255, 255, 0.95);
 }
 
+/* ---- Date range filter ---- */
+.ds-days {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.ds-days-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  margin-right: 2px;
+}
+
+.ds-days-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ds-days-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.ds-days-btn.active {
+  background: rgba(255, 255, 255, 0.88);
+  color: #1a1f30;
+  border-color: rgba(255, 255, 255, 0.95);
+}
+
 /* ---- Map ---- */
 .ds-map-wrap {
   position: relative;

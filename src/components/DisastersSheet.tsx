@@ -19,6 +19,8 @@ const ALL_TYPES: DisasterType[] = [
   'earthquake', 'wildfire', 'volcano', 'flood', 'cyclone', 'drought', 'storm', 'other',
 ]
 
+const DAY_OPTIONS = [1, 3, 5, 7, 14, 30]
+
 const MAP_H = 240
 
 function timeAgo(dateStr: string): string {
@@ -39,6 +41,7 @@ export function DisastersSheet({ open, onClose }: Props) {
   const [events, setEvents] = useState<DisasterEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTypes, setActiveTypes] = useState<Set<DisasterType>>(new Set())
+  const [daysFilter, setDaysFilter] = useState(5)
   const [selected, setSelected] = useState<DisasterEvent | null>(null)
 
   // Map state
@@ -62,9 +65,12 @@ export function DisastersSheet({ open, onClose }: Props) {
     return () => { cancelled = true }
   }, [open])
 
-  const filtered = activeTypes.size === 0
-    ? events
-    : events.filter((e) => activeTypes.has(e.type))
+  const cutoff = Date.now() - daysFilter * 86400000
+  const filtered = events.filter((e) => {
+    if (activeTypes.size > 0 && !activeTypes.has(e.type)) return false
+    if (new Date(e.date).getTime() < cutoff) return false
+    return true
+  })
 
   const toggleType = (t: DisasterType) => {
     setActiveTypes((prev) => {
@@ -306,6 +312,19 @@ export function DisastersSheet({ open, onClose }: Props) {
               ))}
             </div>
 
+            <div className="ds-days">
+              <span className="ds-days-label">Past</span>
+              {DAY_OPTIONS.map((d) => (
+                <button
+                  key={d}
+                  className={`ds-days-btn ${daysFilter === d ? 'active' : ''}`}
+                  onClick={() => setDaysFilter(d)}
+                >
+                  {d}d
+                </button>
+              ))}
+            </div>
+
             <div className="ds-map-wrap">
               <canvas
                 ref={canvasRef}
@@ -320,7 +339,7 @@ export function DisastersSheet({ open, onClose }: Props) {
                 <div className="ds-map-loading">Loading disaster data…</div>
               )}
               <div className="ds-map-count">
-                {filtered.length} event{filtered.length !== 1 ? 's' : ''} · past 30 days
+                {filtered.length} event{filtered.length !== 1 ? 's' : ''} · past {daysFilter} day{daysFilter !== 1 ? 's' : ''}
               </div>
             </div>
 
