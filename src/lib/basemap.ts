@@ -245,3 +245,9 @@ export function loadTile(url: string): Promise<HTMLImageElement> {
     img.src = url
   })
 }
+
+/** Synchronous cache lookup — returns the image if already loaded, else null. */
+export function getCachedTile(url: string): HTMLImageElement | null {
+  const hit = cache.get(url)
+  return hit && hit.complete ? hit : null
+}

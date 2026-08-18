@@ -112,6 +112,22 @@ export type Theme = 'auto' | 'book' | 'geo'
 
 export type WeatherLayerId = 'precipitation' | 'wind' | 'temperature' | 'cloud' | 'pressure' | 'snow'
 
+export type DisasterType = 'earthquake' | 'wildfire' | 'volcano' | 'flood' | 'cyclone' | 'drought' | 'storm' | 'other'
+
+export interface DisasterEvent {
+  id: string
+  type: DisasterType
+  title: string
+  description?: string
+  date: string
+  lat: number
+  lng: number
+  source: 'usgs' | 'nasa-eonet' | 'gdacs'
+  severity?: string
+  link?: string
+  magnitude?: number
+}
+
 export interface Settings {
   temperature: TemperatureUnit
   wind: WindUnit

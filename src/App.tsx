@@ -17,6 +17,7 @@ import { AlertBanner } from './components/AlertBanner'
 import { YearOutlook } from './components/YearOutlook'
 import { SettingsSheet } from './components/SettingsSheet'
 import { InfoSheet } from './components/InfoSheet'
+import { DisastersSheet } from './components/DisastersSheet'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
 import { useLocations } from './state/useLocations'
@@ -35,6 +36,7 @@ export default function App() {
   )
   const [showSettings, setShowSettings] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
+  const [showDisasters, setShowDisasters] = useState(false)
   const [detail, setDetail] = useState<DetailTarget>(null)
   const [drill, setDrill] = useState<Drill | null>(null)
 
@@ -152,6 +154,13 @@ export default function App() {
             </div>
             <button
               className="icon-btn glass"
+              onClick={() => setShowDisasters(true)}
+              aria-label="Natural Disasters"
+            >
+              🌍
+            </button>
+            <button
+              className="icon-btn glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
@@ -188,6 +197,13 @@ export default function App() {
             <div className="brand">Weatherly</div>
             <button
               className="icon-btn glass"
+              onClick={() => setShowDisasters(true)}
+              aria-label="Natural Disasters"
+            >
+              🌍
+            </button>
+            <button
+              className="icon-btn glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
@@ -218,6 +234,7 @@ export default function App() {
         update={update}
       />
       <InfoSheet open={showInfo} onClose={() => setShowInfo(false)} />
+      <DisastersSheet open={showDisasters} onClose={() => setShowDisasters(false)} />
       {bundle && (
         <MetricDetailSheet
           target={detail}
