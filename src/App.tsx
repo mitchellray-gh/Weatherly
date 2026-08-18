@@ -153,18 +153,20 @@ export default function App() {
               <SearchBar onSelect={addLocation} />
             </div>
             <button
-              className="icon-btn glass"
+              className="topbar-labeled glass"
               onClick={() => setShowDisasters(true)}
               aria-label="Natural Disasters"
             >
-              🌍
+              <span className="topbar-labeled-icon">⚠️</span>
+              <span className="topbar-labeled-text">Alerts</span>
             </button>
             <button
-              className="icon-btn glass"
+              className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
-              ⚙︎
+              <span className="topbar-labeled-icon">⚙</span>
+              <span className="topbar-labeled-text">Settings</span>
             </button>
           </div>
           {locations.length > 1 && (
@@ -196,18 +198,20 @@ export default function App() {
             </button>
             <div className="brand">Weatherly</div>
             <button
-              className="icon-btn glass"
+              className="topbar-labeled glass"
               onClick={() => setShowDisasters(true)}
               aria-label="Natural Disasters"
             >
-              🌍
+              <span className="topbar-labeled-icon">⚠️</span>
+              <span className="topbar-labeled-text">Alerts</span>
             </button>
             <button
-              className="icon-btn glass"
+              className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
-              ⚙︎
+              <span className="topbar-labeled-icon">⚙</span>
+              <span className="topbar-labeled-text">Settings</span>
             </button>
           </div>
 

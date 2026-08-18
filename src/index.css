@@ -236,7 +236,8 @@
   font-weight: 700;
 }
 
-:root[data-theme='book'] .icon-btn {
+:root[data-theme='book'] .icon-btn,
+:root[data-theme='book'] .topbar-labeled {
   background: var(--paper-raised);
   border: 1px solid var(--rule);
 }
@@ -451,6 +452,7 @@
 
 /* Icon buttons & round controls stay perfectly circular. */
 :root[data-theme='geo'] .icon-btn,
+:root[data-theme='geo'] .topbar-labeled,
 :root[data-theme='geo'] .radar-play,
 :root[data-theme='geo'] .radar-zoom button {
   border-radius: 999px;
