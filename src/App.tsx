@@ -22,9 +22,7 @@ import { AlertSettings } from './components/AlertSettings'
 import { RiskBadge } from './components/RiskBadge'
 import { Sheet } from './components/Sheet'
 import { EmailSettings } from './components/EmailSettings'
-import { AutoReportBanner } from './components/AutoReportBanner'
 import { ToolsMenu } from './components/ToolsMenu'
-import { useAutoReports } from './hooks/useAutoReports'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
 import { evaluateRules } from './lib/thresholds'
@@ -56,7 +54,6 @@ export default function App() {
   const [drill, setDrill] = useState<Drill | null>(null)
   const [risk, setRisk] = useState<RiskResult | null>(null)
   const [disasters, setDisasters] = useState<DisasterEvent[]>([])
-  const { triggers: autoReportTriggers, dismiss: dismissAutoReport } = useAutoReports(disasters)
 
   // Apply the theme to the document root.
   useEffect(() => {
@@ -294,10 +291,6 @@ export default function App() {
           <EmailSettings bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
         )}
       </Sheet>
-      <AutoReportBanner
-        triggers={autoReportTriggers}
-        onDismiss={dismissAutoReport}
-      />
       {bundle && (
         <MetricDetailSheet
           target={detail}
