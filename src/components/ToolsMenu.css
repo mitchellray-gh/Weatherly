@@ -1,0 +1,67 @@
+.tm-wrap {
+  position: relative;
+}
+
+.tm-trigger {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur));
+  -webkit-backdrop-filter: blur(var(--blur));
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.tm-trigger:active {
+  transform: scale(0.92);
+}
+
+.tm-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--surface, #1e293b);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 4px;
+  z-index: 200;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.tm-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.12s;
+  text-align: left;
+}
+
+.tm-item:hover {
+  background: var(--glass-bg-strong, rgba(255, 255, 255, 0.1));
+}
+
+.tm-item-icon {
+  font-size: 15px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.tm-item-label {
+  font-weight: 500;
+}

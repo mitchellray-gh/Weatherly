@@ -21,9 +21,9 @@ import { DisastersSheet } from './components/DisastersSheet'
 import { AlertSettings } from './components/AlertSettings'
 import { RiskBadge } from './components/RiskBadge'
 import { Sheet } from './components/Sheet'
-import { ReportButton } from './components/ReportButton'
 import { EmailSettings } from './components/EmailSettings'
 import { AutoReportBanner } from './components/AutoReportBanner'
+import { ToolsMenu } from './components/ToolsMenu'
 import { useAutoReports } from './hooks/useAutoReports'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
@@ -186,6 +186,12 @@ export default function App() {
     )
   }, [loading, error, bundle, today, settings, outlook, outlookLoading, refresh])
 
+  const handleReport = async () => {
+    if (!bundle) return
+    const { generateReport } = await import('./lib/generateReport')
+    generateReport(bundle, settings, risk, disasters)
+  }
+
   return (
     <>
       {!book && !geo && <Background weatherCode={code} isDay={isDay} />}
@@ -200,38 +206,18 @@ export default function App() {
               <SearchBar onSelect={addLocation} />
             </div>
             <button
-              className="topbar-labeled glass"
+              className="icon-btn glass"
               onClick={() => setShowDisasters(true)}
               aria-label="Natural Disasters"
             >
-              <span className="topbar-labeled-icon">⚠️</span>
-              <span className="topbar-labeled-text">Alerts</span>
+              ⚠️
             </button>
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowThresholds(true)}
-              aria-label="Threshold Alerts"
-            >
-              <span className="topbar-labeled-icon">⚡</span>
-              <span className="topbar-labeled-text">Thresholds</span>
-            </button>
-            <ReportButton bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowEmail(true)}
-              aria-label="Email Summaries"
-            >
-              <span className="topbar-labeled-icon">📧</span>
-              <span className="topbar-labeled-text">Email</span>
-            </button>
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowSettings(true)}
-              aria-label="Settings"
-            >
-              <span className="topbar-labeled-icon">⚙</span>
-              <span className="topbar-labeled-text">Settings</span>
-            </button>
+            <ToolsMenu items={[
+              { icon: '⚡', label: 'Thresholds', onClick: () => setShowThresholds(true) },
+              { icon: '📄', label: 'Report', onClick: handleReport },
+              { icon: '📧', label: 'Email', onClick: () => setShowEmail(true) },
+              { icon: '⚙', label: 'Settings', onClick: () => setShowSettings(true) },
+            ]} />
           </div>
           {locations.length > 1 && (
             <div className={`geo-saved ${alerts.length ? 'geo-saved--banner' : ''}`}>
@@ -262,38 +248,18 @@ export default function App() {
             </button>
             <div className="brand">Weatherly</div>
             <button
-              className="topbar-labeled glass"
+              className="icon-btn glass"
               onClick={() => setShowDisasters(true)}
               aria-label="Natural Disasters"
             >
-              <span className="topbar-labeled-icon">⚠️</span>
-              <span className="topbar-labeled-text">Alerts</span>
+              ⚠️
             </button>
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowThresholds(true)}
-              aria-label="Threshold Alerts"
-            >
-              <span className="topbar-labeled-icon">⚡</span>
-              <span className="topbar-labeled-text">Thresholds</span>
-            </button>
-            <ReportButton bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowEmail(true)}
-              aria-label="Email Summaries"
-            >
-              <span className="topbar-labeled-icon">📧</span>
-              <span className="topbar-labeled-text">Email</span>
-            </button>
-            <button
-              className="topbar-labeled glass"
-              onClick={() => setShowSettings(true)}
-              aria-label="Settings"
-            >
-              <span className="topbar-labeled-icon">⚙</span>
-              <span className="topbar-labeled-text">Settings</span>
-            </button>
+            <ToolsMenu items={[
+              { icon: '⚡', label: 'Thresholds', onClick: () => setShowThresholds(true) },
+              { icon: '📄', label: 'Report', onClick: handleReport },
+              { icon: '📧', label: 'Email', onClick: () => setShowEmail(true) },
+              { icon: '⚙', label: 'Settings', onClick: () => setShowSettings(true) },
+            ]} />
           </div>
 
           <SearchBar onSelect={addLocation} />
