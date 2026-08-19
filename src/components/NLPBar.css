@@ -1,0 +1,43 @@
+.nlp-bar {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .45rem .75rem;
+  margin-bottom: .75rem;
+}
+
+.nlp-icon {
+  font-size: .9rem;
+  flex-shrink: 0;
+}
+
+.nlp-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: .85rem;
+  min-width: 0;
+}
+
+.nlp-input::placeholder {
+  color: var(--muted);
+}
+
+.nlp-clear {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .8rem;
+  padding: .1rem .2rem;
+  flex-shrink: 0;
+}
+
+.nlp-clear:hover {
+  color: var(--text);
+}

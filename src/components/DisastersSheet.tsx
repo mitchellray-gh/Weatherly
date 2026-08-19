@@ -8,6 +8,9 @@ import {
   DISASTER_TYPE_COLORS,
 } from '../lib/disasters'
 import { computeBasemap, loadTile, type BasemapTile } from '../lib/basemap'
+import { NLPBar } from './NLPBar'
+import { ExportMenu } from './ExportMenu'
+import type { ParsedQuery } from '../lib/nlp'
 import './DisastersSheet.css'
 
 interface Props {
@@ -71,6 +74,15 @@ export function DisastersSheet({ open, onClose }: Props) {
     if (new Date(e.date).getTime() < cutoff) return false
     return true
   })
+
+  const handleNLP = (query: ParsedQuery) => {
+    if (query.disasterTypes.length > 0) {
+      setActiveTypes(new Set(query.disasterTypes))
+    }
+    if (query.timeRangeDays) {
+      setDaysFilter(query.timeRangeDays)
+    }
+  }
 
   const toggleType = (t: DisasterType) => {
     setActiveTypes((prev) => {
@@ -289,10 +301,13 @@ export function DisastersSheet({ open, onClose }: Props) {
             <div className="ds-grip" />
             <div className="ds-head">
               <h2>Natural Disasters</h2>
+              <ExportMenu events={filtered} />
               <button className="ds-close" onClick={onClose} aria-label="Close">
                 Done
               </button>
             </div>
+
+            <NLPBar onSearch={handleNLP} />
 
             <div className="ds-filters">
               <button

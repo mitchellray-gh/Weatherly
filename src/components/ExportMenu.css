@@ -1,0 +1,21 @@
+.export-menu {
+  display: flex;
+  gap: .4rem;
+}
+
+.export-btn {
+  padding: .35rem .65rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text);
+  font-size: .78rem;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+  white-space: nowrap;
+}
+
+.export-btn:hover {
+  background: var(--surface);
+  border-color: var(--accent);
+}

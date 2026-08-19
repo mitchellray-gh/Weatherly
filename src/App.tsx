@@ -18,8 +18,15 @@ import { YearOutlook } from './components/YearOutlook'
 import { SettingsSheet } from './components/SettingsSheet'
 import { InfoSheet } from './components/InfoSheet'
 import { DisastersSheet } from './components/DisastersSheet'
+import { AlertSettings } from './components/AlertSettings'
+import { RiskBadge } from './components/RiskBadge'
+import { Sheet } from './components/Sheet'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
+import { evaluateRules } from './lib/thresholds'
+import { sendThresholdNotification } from './lib/notify'
+import { computeRisk } from './lib/risk'
+import type { RiskResult } from './lib/risk'
 import { useLocations } from './state/useLocations'
 import { useSettings } from './state/useSettings'
 import { useWeather } from './hooks/useWeather'
@@ -37,8 +44,10 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [showInfo, setShowInfo] = useState(false)
   const [showDisasters, setShowDisasters] = useState(false)
+  const [showThresholds, setShowThresholds] = useState(false)
   const [detail, setDetail] = useState<DetailTarget>(null)
   const [drill, setDrill] = useState<Drill | null>(null)
+  const [risk, setRisk] = useState<RiskResult | null>(null)
 
   // Apply the theme to the document root.
   useEffect(() => {
@@ -59,6 +68,25 @@ export default function App() {
       document.body.style.backgroundColor = ''
     }
   }, [settings.theme])
+
+  // Evaluate threshold alerts and compute risk when weather data changes.
+  useEffect(() => {
+    if (!bundle) return
+    const triggered = evaluateRules(bundle.location, bundle.current, bundle.airQuality?.usAqi ?? null)
+    for (const alert of triggered) {
+      sendThresholdNotification(alert)
+    }
+    // Compute risk score
+    const r = computeRisk(
+      bundle.current,
+      bundle.airQuality,
+      [], // disasters would need to be fetched; skip for now
+      bundle.location.latitude,
+      bundle.location.longitude,
+      null,
+    )
+    setRisk(r)
+  }, [bundle])
 
   const today = bundle?.daily[0]
   const code = bundle?.current.weatherCode ?? 3
@@ -93,6 +121,7 @@ export default function App() {
           onFeels={() => setDetail('feels')}
           onToday={() => today && setDrill({ kind: 'day', date: today.date })}
         />
+        <RiskBadge risk={risk} />
         <BestTimes
           hourly={bundle.hourly}
           settings={settings}
@@ -162,6 +191,14 @@ export default function App() {
             </button>
             <button
               className="topbar-labeled glass"
+              onClick={() => setShowThresholds(true)}
+              aria-label="Threshold Alerts"
+            >
+              <span className="topbar-labeled-icon">⚡</span>
+              <span className="topbar-labeled-text">Thresholds</span>
+            </button>
+            <button
+              className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
@@ -207,6 +244,14 @@ export default function App() {
             </button>
             <button
               className="topbar-labeled glass"
+              onClick={() => setShowThresholds(true)}
+              aria-label="Threshold Alerts"
+            >
+              <span className="topbar-labeled-icon">⚡</span>
+              <span className="topbar-labeled-text">Thresholds</span>
+            </button>
+            <button
+              className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
               aria-label="Settings"
             >
@@ -239,6 +284,9 @@ export default function App() {
       />
       <InfoSheet open={showInfo} onClose={() => setShowInfo(false)} />
       <DisastersSheet open={showDisasters} onClose={() => setShowDisasters(false)} />
+      <Sheet open={showThresholds} onClose={() => setShowThresholds(false)} title="Threshold Alerts">
+        <AlertSettings locations={locations} activeLocation={active} />
+      </Sheet>
       {bundle && (
         <MetricDetailSheet
           target={detail}

@@ -1,0 +1,34 @@
+.risk-badge {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem .75rem;
+  text-align: center;
+}
+
+.risk-score {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--risk-color);
+  line-height: 1;
+}
+
+.risk-label {
+  font-size: .72rem;
+  color: var(--muted);
+  margin: .2rem 0 .4rem;
+}
+
+.risk-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.risk-bar-fill {
+  height: 100%;
+  background: var(--risk-color);
+  border-radius: 2px;
+  transition: width .5s ease;
+}

@@ -1,0 +1,222 @@
+.as {
+  padding: 1.25rem;
+}
+
+.as-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+}
+
+.as-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.as-notif-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: .4rem .75rem;
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.as-desc {
+  margin: 0 0 1rem;
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.as-empty {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.as-rule {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: .6rem .75rem;
+  margin-bottom: .5rem;
+  transition: opacity .2s;
+}
+
+.as-rule--off {
+  opacity: .5;
+}
+
+.as-rule-main {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.as-toggle {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.as-rule-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.as-rule-condition {
+  font-size: .88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.as-rule-meta {
+  font-size: .72rem;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.as-remove {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .85rem;
+  padding: .2rem;
+}
+
+.as-remove:hover {
+  color: #f44;
+}
+
+/* Add form */
+
+.as-form {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: .75rem;
+  margin-top: .5rem;
+}
+
+.as-form-row {
+  margin-bottom: .6rem;
+}
+
+.as-form-row label {
+  display: block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+  margin-bottom: .25rem;
+}
+
+.as-form-row select,
+.as-input {
+  width: 100%;
+  padding: .45rem .6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+  font-size: .85rem;
+}
+
+.as-form-row--inline {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+.as-form-row--inline select {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.as-form-row--inline .as-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.as-unit {
+  font-size: .8rem;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+.as-cooldown-btns {
+  display: flex;
+  gap: .35rem;
+}
+
+.as-cooldown-btn {
+  flex: 1;
+  padding: .35rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+}
+
+.as-cooldown-btn.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.as-form-actions {
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+
+.as-cancel {
+  padding: .4rem .8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.as-save {
+  padding: .4rem .8rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.as-add-btn {
+  display: block;
+  width: 100%;
+  margin-top: .5rem;
+  padding: .6rem;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: .85rem;
+  cursor: pointer;
+  transition: border-color .2s, color .2s;
+}
+
+.as-add-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
