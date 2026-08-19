@@ -21,6 +21,10 @@ import { DisastersSheet } from './components/DisastersSheet'
 import { AlertSettings } from './components/AlertSettings'
 import { RiskBadge } from './components/RiskBadge'
 import { Sheet } from './components/Sheet'
+import { ReportButton } from './components/ReportButton'
+import { EmailSettings } from './components/EmailSettings'
+import { AutoReportBanner } from './components/AutoReportBanner'
+import { useAutoReports } from './hooks/useAutoReports'
 import { ErrorState, InlineSkeleton, LoadingState } from './components/States'
 import { deriveAlerts } from './lib/alerts'
 import { evaluateRules } from './lib/thresholds'
@@ -31,6 +35,8 @@ import { useLocations } from './state/useLocations'
 import { useSettings } from './state/useSettings'
 import { useWeather } from './hooks/useWeather'
 import { useEffect } from 'react'
+import { fetchDisasters } from './lib/disasters'
+import type { DisasterEvent } from './types'
 import './App.css'
 
 export default function App() {
@@ -45,9 +51,12 @@ export default function App() {
   const [showInfo, setShowInfo] = useState(false)
   const [showDisasters, setShowDisasters] = useState(false)
   const [showThresholds, setShowThresholds] = useState(false)
+  const [showEmail, setShowEmail] = useState(false)
   const [detail, setDetail] = useState<DetailTarget>(null)
   const [drill, setDrill] = useState<Drill | null>(null)
   const [risk, setRisk] = useState<RiskResult | null>(null)
+  const [disasters, setDisasters] = useState<DisasterEvent[]>([])
+  const { triggers: autoReportTriggers, dismiss: dismissAutoReport } = useAutoReports(disasters)
 
   // Apply the theme to the document root.
   useEffect(() => {
@@ -80,13 +89,22 @@ export default function App() {
     const r = computeRisk(
       bundle.current,
       bundle.airQuality,
-      [], // disasters would need to be fetched; skip for now
+      disasters,
       bundle.location.latitude,
       bundle.location.longitude,
       null,
     )
     setRisk(r)
-  }, [bundle])
+  }, [bundle, disasters])
+
+  // Fetch disasters for auto-reporting and risk scoring.
+  useEffect(() => {
+    let cancelled = false
+    fetchDisasters().then((evts) => {
+      if (!cancelled) setDisasters(evts)
+    })
+    return () => { cancelled = true }
+  }, [])
 
   const today = bundle?.daily[0]
   const code = bundle?.current.weatherCode ?? 3
@@ -197,6 +215,15 @@ export default function App() {
               <span className="topbar-labeled-icon">⚡</span>
               <span className="topbar-labeled-text">Thresholds</span>
             </button>
+            <ReportButton bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
+            <button
+              className="topbar-labeled glass"
+              onClick={() => setShowEmail(true)}
+              aria-label="Email Summaries"
+            >
+              <span className="topbar-labeled-icon">📧</span>
+              <span className="topbar-labeled-text">Email</span>
+            </button>
             <button
               className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
@@ -250,6 +277,15 @@ export default function App() {
               <span className="topbar-labeled-icon">⚡</span>
               <span className="topbar-labeled-text">Thresholds</span>
             </button>
+            <ReportButton bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
+            <button
+              className="topbar-labeled glass"
+              onClick={() => setShowEmail(true)}
+              aria-label="Email Summaries"
+            >
+              <span className="topbar-labeled-icon">📧</span>
+              <span className="topbar-labeled-text">Email</span>
+            </button>
             <button
               className="topbar-labeled glass"
               onClick={() => setShowSettings(true)}
@@ -287,6 +323,15 @@ export default function App() {
       <Sheet open={showThresholds} onClose={() => setShowThresholds(false)} title="Threshold Alerts">
         <AlertSettings locations={locations} activeLocation={active} />
       </Sheet>
+      <Sheet open={showEmail} onClose={() => setShowEmail(false)} title="Email Summaries">
+        {bundle && (
+          <EmailSettings bundle={bundle} settings={settings} risk={risk} disasters={disasters} />
+        )}
+      </Sheet>
+      <AutoReportBanner
+        triggers={autoReportTriggers}
+        onDismiss={dismissAutoReport}
+      />
       {bundle && (
         <MetricDetailSheet
           target={detail}

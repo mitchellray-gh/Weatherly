@@ -1,0 +1,115 @@
+.es {
+  padding: 1.25rem;
+}
+
+.es h3 {
+  margin: 0 0 .25rem;
+  font-size: 1.1rem;
+}
+
+.es-desc {
+  margin: 0 0 1rem;
+  font-size: .82rem;
+  color: var(--muted);
+}
+
+.es-form {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+}
+
+.es-row {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+.es-row label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--muted);
+}
+
+.es-input {
+  padding: .45rem .6rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+  font-size: .85rem;
+}
+
+.es-link {
+  font-size: .72rem;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.es-link:hover {
+  text-decoration: underline;
+}
+
+.es-seg {
+  display: flex;
+  gap: .35rem;
+}
+
+.es-seg button {
+  flex: 1;
+  padding: .4rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.es-seg button.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.es-checks {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.es-check {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.es-check input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+.es-send-btn {
+  padding: .55rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+
+.es-send-btn:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.es-result {
+  font-size: .82rem;
+  color: var(--muted);
+  text-align: center;
+}
